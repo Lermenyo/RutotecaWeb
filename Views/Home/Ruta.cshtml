@@ -1,0 +1,16 @@
+﻿@model RutotecaWeb.Models.RutaDTO
+
+@{
+    ViewData["Title"] = "Ruta";
+}
+
+    <h1>
+        @Html.DisplayFor(model => model.Codigo)
+    </h1>
+    <h2>
+        @Html.DisplayFor(model => model.Nombre)
+    </h2>
+<div>
+    @Html.ActionLink("Edit", "Edit", new { /* id = Model.PrimaryKey */ }) |
+    <a asp-action="Index">Back to List</a>
+</div>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using RutotecaWeb.Data;
 using RutotecaWeb.Models;
 
 namespace RutotecaWeb.Controllers
@@ -27,9 +28,8 @@ namespace RutotecaWeb.Controllers
         {
             if (!String.IsNullOrEmpty(id))
             {
-                var _back = new BackEnd.Domain.Ruta();
-                var _ruta = _back.GetByPermalink(id);
-                return View("Index", _ruta);
+                var _ruta = new SqlServerRutaQueries().GetRutasByPermalink(id);
+                return View("Ruta", _ruta);
             }
             else
                 return View();
@@ -37,8 +37,7 @@ namespace RutotecaWeb.Controllers
 
         public IActionResult Index()
         {
-            var _back = new BackEnd.Domain.Ruta();
-            var _ruta = _back.GetByPermalink("SL-AN-0099-Barranco-de-la-Lana-(El-Ronquillo)");
+            var _ruta = new SqlServerRutaQueries().GetRutasByPermalink("PR-AS-0001-1-hoces-del-esva-i");
             return View();
         }
 
