@@ -1,34 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using RutotecaWeb.Data;
+using RutotecaWeb.DataContext;
 using RutotecaWeb.Models;
+using RutotecaWeb.Services;
 
 namespace RutotecaWeb.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IDapper _dapper;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IDapper dapper)
         {
             _logger = logger;
+            _dapper = dapper;
         }
 
-        //public IActionResult Index()
-        //{
-        //    return View();
-        //}
         [Route("{id}")]
-        public IActionResult GetByPermalink(string id)
+        public async Task<IActionResult> GetByPermalinkAsync(string id)
         {
             if (!String.IsNullOrEmpty(id))
             {
-                var _ruta = new SqlServerRutaQueries().GetRutasByPermalink(id);
+                var _ruta = await Task.FromResult(_dapper.Get<RutaDTO>($"select * FROM vwRutas where Permalink='{id}'", null, commandType: CommandType.Text));
                 return View("Ruta", _ruta);
             }
             else
@@ -37,7 +37,6 @@ namespace RutotecaWeb.Controllers
 
         public IActionResult Index()
         {
-            var _ruta = new SqlServerRutaQueries().GetRutasByPermalink("PR-AS-0001-1-hoces-del-esva-i");
             return View();
         }
 
