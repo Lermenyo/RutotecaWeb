@@ -12,12 +12,6 @@
         <span class="loadingText">Buscando cercanos....</span>
     </div>
 </div>
-<br />
-<div id="dvRelacionadosPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando relacionados....</span>
-    </div>
-</div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
@@ -25,7 +19,7 @@
     {
         $.ajax
             ({
-                url: "/Home/GetCercanos",
+                url: "/Home/GetRutasCercanas",
                 contentType: "application/html; charset=utf-8",
                 data: {id:@Model.IdElemento},
             type: "GET",
@@ -41,32 +35,9 @@
             }
         })
     }
-        function LoadRelacionados()
-    {
-        $.ajax
-            ({
-                url: "/Home/GetRelacionados",
-                contentType: "application/html; charset=utf-8",
-                data: {id:@Model.IdElemento},
-            type: "GET",
-            //cache: !0,
-            datatype: "html",
-            success: function(t)
-            {
-                $("#dvRelacionadosPostBind").html(t)
-            },
-            error: function()
-            {
-                $("#dvRelacionadosPostBind").html("Datos no encontrados")
-            }
-        })
-    }
 
     $(document).ready(function()
     {
-        //LoadPerfil();
         LoadCercanos();
-        LoadRelacionados();
-
     });
 </script>

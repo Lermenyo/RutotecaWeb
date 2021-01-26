@@ -104,9 +104,57 @@ namespace RutotecaWeb.Controllers
                 return View("Index");
         }
 
-        public async Task<IList<AtimetriaDTO>> LoadAltimetriasAsync(int id)
+        public JsonResult GetAltimetrias(int id)
         {
-            return await Task.FromResult(_dapper.GetAll<AtimetriaDTO>($"select * FROM vwAltimetria where idRuta = {id} ORDER BY idTrack, Orden", null, commandType: CommandType.Text));
+            var datos = _dapper.GetAll<AtimetriaDTO>($"select * FROM vwAltimetria where idRuta = {id} ORDER BY idTrack, Orden", null, commandType: CommandType.Text);
+            var retorno = new List<object[]>();
+            if (datos != null && datos.Count() > 0)
+            {
+                var tracks = datos.Select(d => d.idTrack).Distinct();
+
+                var distanciaMaxima = datos.Max(d => d.dist);
+
+                var encabezados = new List<string>()
+                {
+                    "X"
+                };
+                tracks.ToList().ForEach(t =>
+                {
+                    encabezados.Add(String.Format("Track{0:00000}", t));
+                });
+
+                retorno.Add(encabezados.ToArray());
+
+                for (int i = 1; i <= distanciaMaxima; i++)
+                {
+                    var valores = new List<object>()
+                    {
+                        i * 100
+                    };
+
+                    tracks.ToList().ForEach(t =>
+                    {
+                        var ele = datos.FirstOrDefault(d => d.idTrack == t && d.dist == i)?.height;
+                        valores.Add(ele ?? null);
+                    });
+
+                    retorno.Add(valores.ToArray());
+                }
+            }
+            else
+            {
+                retorno.Add(new List<string>()
+                {
+                    "Sin Dato",
+                    "Sin Dato"
+                }.ToArray());
+                retorno.Add(new List<object>()
+                {
+                    1,0
+                }.ToArray());
+
+            }
+            return Json(retorno.ToArray());
         }
 
         public async Task<IList<CercanoDTO>> LoadCercanosAsync(int id)
@@ -124,12 +172,18 @@ namespace RutotecaWeb.Controllers
         }
         
         [HttpGet]
-        public ActionResult GetCercanos (int id)
+        public ActionResult GetLugaresCercanos (int id)
         {
-            var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text);
+            var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwLugaresEnRuta where ID ={id}", null, commandType: CommandType.Text);
             return PartialView("_ListaCercanos", _cecanos);
         }
 
+        [HttpGet]
+        public ActionResult GetRutasCercanas(int id)
+        {
+            var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwRutasEnLugar where ID ={id}", null, commandType: CommandType.Text);
+            return PartialView("_ListaCercanos", _cecanos);
+        }
         [HttpGet]
         public ActionResult GetRelacionados(int id)
         {
