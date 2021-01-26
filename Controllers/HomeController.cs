@@ -41,6 +41,7 @@ namespace RutotecaWeb.Controllers
                     case 4:  //Monumento
                     case 5:  //Evento
                     case 10:  //Etiqueta
+                        return await SetTag(_elemento.Id);
                     case 20:  //Documento
                     default:
                         return View("Index");
@@ -90,6 +91,19 @@ namespace RutotecaWeb.Controllers
                 return View("Index");
         }
 
+        private async Task<IActionResult> SetTag(int idElemento)
+        {
+            var _tag = await Task.FromResult(_dapper.Get<TagDTO>($"select * FROM vwVertices where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            if (_tag != null)
+            {
+                ViewData["Title"] = String.Format("{0} - {1}", _tag.Nombre, _tag.DescripcionCorta);
+                ViewData["MetaDescription"] = String.Format("{0}", _tag.DescripcionCorta);
+                return View("Tag", _tag);
+            }
+            else
+                return View("Index");
+        }
+
         public async Task<IList<AtimetriaDTO>> LoadAltimetriasAsync(int id)
         {
             return await Task.FromResult(_dapper.GetAll<AtimetriaDTO>($"select * FROM vwAltimetria where idRuta = {id} ORDER BY idTrack, Orden", null, commandType: CommandType.Text));
@@ -108,13 +122,26 @@ namespace RutotecaWeb.Controllers
             //return PartialView("_PerfilDeRuta", _altimetrias);
             return PartialView("_PerfilDeRuta");
         }
-
-
+        
         [HttpGet]
         public ActionResult GetCercanos (int id)
         {
             var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text);
             return PartialView("_ListaCercanos", _cecanos);
+        }
+
+        [HttpGet]
+        public ActionResult GetRelacionados(int id)
+        {
+            var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwTagsRuta where Id ={id}", null, commandType: CommandType.Text);
+            return PartialView("_ListaRelacionados", _cecanos);
+        }
+
+        [HttpGet]
+        public ActionResult GetRutasEnTag(int id)
+        {
+            var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
+            return PartialView("_ListaRelacionados", _cecanos);
         }
 
         public IActionResult Index()

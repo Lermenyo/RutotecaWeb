@@ -80,10 +80,16 @@
 </ul>
 
 @await Html.PartialAsync("_PerfilDeRuta")
-
+<br />
 <div id="dvCercanosPostBind">
     <div class="loaderCenter">
         <span class="loadingText">Buscando cercanos....</span>
+    </div>
+</div>
+<br />
+<div id="dvRelacionadosPostBind">
+    <div class="loaderCenter">
+        <span class="loadingText">Buscando relacionados....</span>
     </div>
 </div>
 
@@ -106,6 +112,26 @@
             error: function()
             {
                 $("#dvCercanosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
+    function LoadRelacionados()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetRelacionados",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvRelacionadosPostBind").html(t)
+            },
+            error: function()
+            {
+                $("#dvRelacionadosPostBind").html("Datos no encontrados")
             }
         })
     }
@@ -135,6 +161,7 @@
     {
         //LoadPerfil();
         LoadCercanos();
+        LoadRelacionados();
 
     });
 </script>

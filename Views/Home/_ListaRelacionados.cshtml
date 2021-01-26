@@ -1,0 +1,13 @@
+﻿@model List<RelacionadoDTO>
+<h4>Relacionado Con</h4>
+<div class="list-group">
+    @foreach (var item in Model)
+    {
+        <a href="@item.Permalink" class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">@item.Nombre</h5>
+            </div>
+            <p class="mb-1">@item.DescripcionCorta</p>
+        </a>
+    }
+</div>
