@@ -1,0 +1,38 @@
+﻿@model RutotecaWeb.Models.VerticeDTO
+
+<h1>
+    @Html.DisplayFor(model => model.Nombre)
+</h1>
+<h2>
+    @Html.DisplayFor(model => model.DescripcionCorta)
+</h2>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    function LoadCercanos()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetCercanos",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvCercanosPostBind").html(t)
+            },
+            error: function()
+            {
+                $("#dvCercanosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
+
+    $(document).ready(function()
+    {
+        LoadCercanos();
+
+    });
+</script>
