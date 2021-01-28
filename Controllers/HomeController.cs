@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using RutotecaWeb.DataContext;
 using RutotecaWeb.Models;
 using RutotecaWeb.Services;
 
@@ -106,55 +104,11 @@ namespace RutotecaWeb.Controllers
 
         public JsonResult GetAltimetrias(int id)
         {
-            var datos = _dapper.GetAll<AtimetriaDTO>($"select * FROM vwAltimetria where idRuta = {id} ORDER BY idTrack, Orden", null, commandType: CommandType.Text);
-            var retorno = new List<object[]>();
-            if (datos != null && datos.Count() > 0)
-            {
-                var tracks = datos.Select(d => d.idTrack).Distinct();
-
-                var distanciaMaxima = datos.Max(d => d.dist);
-
-                var encabezados = new List<string>()
-                {
-                    "X"
-                };
-                tracks.ToList().ForEach(t =>
-                {
-                    encabezados.Add(String.Format("Track{0:00000}", t));
-                });
-
-                retorno.Add(encabezados.ToArray());
-
-                for (int i = 1; i <= distanciaMaxima; i++)
-                {
-                    var valores = new List<object>()
-                    {
-                        i * 100
-                    };
-
-                    tracks.ToList().ForEach(t =>
-                    {
-                        var ele = datos.FirstOrDefault(d => d.idTrack == t && d.dist == i)?.height;
-                        valores.Add(ele ?? null);
-                    });
-
-                    retorno.Add(valores.ToArray());
-                }
-            }
+            var datos = _dapper.Get<AtimetriaDTO>($"select * FROM AuxAltimetrias where idRuta = {id}", null, commandType: CommandType.Text);
+            if (datos != null)
+                return Json(System.Text.Json.JsonSerializer.Deserialize<object>(datos.Json));
             else
-            {
-                retorno.Add(new List<string>()
-                {
-                    "Sin Dato",
-                    "Sin Dato"
-                }.ToArray());
-                retorno.Add(new List<object>()
-                {
-                    1,0
-                }.ToArray());
-
-            }
-            return Json(retorno.ToArray());
+                return null;
         }
 
         public async Task<IList<CercanoDTO>> LoadCercanosAsync(int id)
@@ -176,6 +130,13 @@ namespace RutotecaWeb.Controllers
         {
             var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwLugaresEnRuta where ID ={id}", null, commandType: CommandType.Text);
             return PartialView("_ListaCercanos", _cecanos);
+        }
+
+        [HttpGet]
+        public JsonResult GetPuntoElemento(int id)
+        {
+            var _punto = _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
+            return Json(_punto);
         }
 
         [HttpGet]

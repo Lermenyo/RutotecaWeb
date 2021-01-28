@@ -7,11 +7,7 @@ namespace RutotecaWeb.Models
 {
     public class AtimetriaDTO
     {
-      public int idRuta     { get; set; }
-      public int idTrack    {get; set;}
-      public int IdIBPIndex {get; set;}
-      public int dist       {get; set;}
-      public int height     {get; set;}
-      public int Orden      {get; set;}
+        public int idRuta     { get; set; }
+        public string Json    {get; set;}
     }
 }
