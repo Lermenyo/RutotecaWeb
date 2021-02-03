@@ -1,0 +1,75 @@
+﻿@model int
+<br />
+<button type="button" class="btn btn-dark btn-lg" onclick="SetMeteoble()">Meteoblue</button>
+<button type="button" class="btn btn-dark btn-lg" onclick="SetMapa()">Mapa</button>
+<button type="button" class="btn btn-dark btn-lg" onclick="SetAEMET()">AEMET</button>
+<br />
+<br />
+<div id="dvMeteo">
+    <div class="loaderCenter">
+        <span class="loadingText">Cargando....</span>
+    </div>
+</div>
+<br />
+<script type="text/javascript">
+    function SetMeteoble()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetMeteoblue3h",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model},
+            type: "GET",
+            cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvMeteo").html(t)
+            },
+            error: function()
+            {
+                $("#dvMeteo").html("Datos no encontrados")
+            }
+        })
+    }
+    function SetMapa()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetMeteoblueMapa",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model},
+            type: "GET",
+            cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvMeteo").html(t)
+            },
+            error: function()
+            {
+                $("#dvMeteo").html("Datos no encontrados")
+            }
+        })
+    }
+    function SetAEMET()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetAEMET",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model},
+            type: "GET",
+            cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvMeteo").html(t)
+            },
+            error: function()
+            {
+                $("#dvMeteo").html("Datos no encontrados")
+            }
+        })
+    }
+</script>

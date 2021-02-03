@@ -108,7 +108,7 @@ namespace RutotecaWeb.Controllers
             if (datos != null)
                 return Json(System.Text.Json.JsonSerializer.Deserialize<object>(datos.Json));
             else
-                return null;
+                return Json("NoData");
         }
 
         public async Task<IList<CercanoDTO>> LoadCercanosAsync(int id)
@@ -116,15 +116,6 @@ namespace RutotecaWeb.Controllers
             return await Task.FromResult(_dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text));
         }
 
-
-        [HttpGet]
-        public ActionResult GetPerfil(int id)
-        {
-            //var _altimetrias = _dapper.GetAll<AtimetriaDTO>($"select * FROM vwAltimetria where idRuta = {id} ORDER BY idTrack, Orden", null, commandType: CommandType.Text);
-            //return PartialView("_PerfilDeRuta", _altimetrias);
-            return PartialView("_PerfilDeRuta");
-        }
-        
         [HttpGet]
         public ActionResult GetLugaresCercanos (int id)
         {
@@ -135,8 +126,13 @@ namespace RutotecaWeb.Controllers
         [HttpGet]
         public JsonResult GetPuntoElemento(int id)
         {
-            var _punto = _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
-            return Json(_punto);
+            return Json(GetPuntoByIdElemento(id));
+        }
+
+        
+        public PuntoMapa GetPuntoByIdElemento(int id)
+        {
+            return _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
         }
 
         [HttpGet]
@@ -157,6 +153,30 @@ namespace RutotecaWeb.Controllers
         {
             var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
             return PartialView("_ListaRelacionados", _cecanos);
+        }
+
+        [HttpGet]
+        public ActionResult GetMeteoblueMapa(int id)
+        {
+            var punto = GetPuntoByIdElemento(id);
+            var url = String.Format("https://www.meteoblue.com/es/tiempo/maps/widget/{0:0.000}{1}{2:0.000}{3}?windAnimation=0&windAnimation=1&gust=0&gust=1&satellite=0&satellite=1&coronaWeatherScore=0&coronaWeatherScore=1&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=10&autowidth=auto",
+               punto.Latitud,
+               (punto.Latitud > 0) ? 'N' : 'S',
+               punto.Longitud,
+               (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
+            return PartialView("_MeteoBlueMapa", url);
+        }
+
+        [HttpGet]
+        public ActionResult GetMeteoblue3h(int id)
+        {
+            var punto = GetPuntoByIdElemento(id);
+            var url = String.Format("https://www.meteoblue.com/es/tiempo/widget/three/{0:0.000}{1}{2:0.000}{3}?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=image",
+               punto.Latitud,
+               (punto.Latitud > 0)?'N':'S',
+               punto.Longitud,
+               (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
+            return PartialView("_MeteoBlue3h", url);
         }
 
         public IActionResult Index()

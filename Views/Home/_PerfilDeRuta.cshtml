@@ -1,31 +1,7 @@
 ﻿@model RutotecaWeb.Models.RutaDTO
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-      google.charts.load("current", {packages:["corechart"]});
-      google.charts.setOnLoadCallback(drawChart);
-    //  function drawChart() {
-    //    var data = google.visualization.arrayToDataTable
-    //        ([['X', 'PR-AA-000'],
-    //          [1, 100],
-    //          [2, 100],
-    //          [3, 100],
-    //          [4, 100],
-    //          [5, 100],
-    //          [6, 100],
-    //          [7, 100],
-    //          [8, 100],
-    //          [9, 100],
-    //          [10, 100]
-    //    ]);
-
-    //    var options = {
-    //      legend: 'none',
-    //      colors: ['green', 'blue', 'red', 'black' , 'yellow', 'gray']
-    //    };
-    //    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    //    chart.draw(data, options);
-    //}
-
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(LoadPerfil);
 
     function LoadPerfil()
     {
@@ -39,14 +15,17 @@
             datatype: "html",
             success: function(t)
             {
-                if (t != null) {
+                if (t != "NoData") {
+                    var data = google.visualization.arrayToDataTable(t);
+                    google.charts.load("current", {packages:["corechart"]});
                     var options = {
                         height: 300,
                         legend: 'none',
                         colors: ['green', 'blue', 'red', 'black', 'yellow', 'gray']
                     };
+                    
                     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-                    chart.draw(google.visualization.arrayToDataTable(t), options);
+                    chart.draw(data, options);
                 }
                 else
                     document.getElementById('chart_div').style.display = "none";

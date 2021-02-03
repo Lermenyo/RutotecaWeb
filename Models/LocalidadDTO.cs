@@ -10,10 +10,5 @@ namespace RutotecaWeb.Models
             public int IdElemento { get; set; }
             public string Nombre { get; set; }
             public string DescripcionCorta { get; set; }
-            public IList<CercanoDTO> Cecanos { get; set; }
-            public LocalidadDTO()
-            {
-                Cecanos = new List<CercanoDTO>();
-            }
     }
 }
