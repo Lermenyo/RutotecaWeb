@@ -8,6 +8,7 @@ namespace RutotecaWeb.Models
     public class CercanoDTO
     {
         public int ID { get; set; }
+        public int IdElementoRuta { get; set; }
         public string Nombre { get; set; }
         public string Permalink { get; set; }
         public string DescripcionCorta { get; set; }

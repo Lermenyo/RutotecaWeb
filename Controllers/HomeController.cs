@@ -53,6 +53,7 @@ namespace RutotecaWeb.Controllers
         private async Task<IActionResult> SetRuta(int idElemento)
         {
             var _ruta = await Task.FromResult(_dapper.Get<RutaDTO>($"select * FROM vwRutas where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            _ruta.TablaExistencias = await Task.FromResult(_dapper.Get<TablaExistenciasDTO>($"select * FROM AuxTablaExistencias where IdElemento={idElemento}", null, commandType: CommandType.Text));
             if (_ruta != null)
             {
                 ViewData["Title"] = String.Format("{0} {1} {2} - {3}", _ruta.CodigoTipo, _ruta.CodigoLugar, _ruta.Numero, _ruta.Nombre);
@@ -172,16 +173,26 @@ namespace RutotecaWeb.Controllers
         }
 
         [HttpGet]
-        public MapaDTO GetMapa(int id)
+        public List<MapaDTO> GetMapa(int id)
         {
             var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
 
             if (_datosMapa != null && _datosMapa.Count > 0)
-                return _datosMapa[0];
+                return _datosMapa;
             else
-                return null;
+                return new List<MapaDTO>();
         }
+        [HttpGet]
+        public List<TrackLugarDTO> GetTracksLugar(int id)
+        {
+            var _datosMapa = _dapper.GetAll<TrackLugarDTO>($"select * FROM vwTracksLugar where IdLugar ={id}", null, commandType: CommandType.Text);
 
+            if (_datosMapa != null && _datosMapa.Count > 0)
+                return _datosMapa;
+            else
+                return new List<TrackLugarDTO>();
+        }
+        
 
         [HttpGet]
         public ActionResult GetMeteoblueMapa(int id)

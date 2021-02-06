@@ -26,38 +26,112 @@
     @Html.DisplayFor(model => model.Nombre)
 </h2>
 
-@await Html.PartialAsync("_DatosRuta", @Model)
-@await Html.PartialAsync("_VisorRuta", @Model)
-
-
-
-<div id="mapid" class="d-block w-100" style="height: 400px">Cargando Ubicación...</div>
-@await Html.PartialAsync("_PerfilDeRuta", @Model)
-<div id="dvImagenesPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando Imagenes....</span>
+<div id="Botonera" class="h-25">
+    <button type="button" class="btn btn-light  m-1 mh-100" onclick="ShowPantalla('Principal')">  <h5><i class="fas  fa-route              fa-lg ml-2" aria-hidden="true"></i><br />  Datos          </h5> </button>
+    @if (Model.TablaExistencias.TieneMapa || Model.TablaExistencias.TieneAltimetrias)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Mapa')">        <h5><i class="fas  fa-map-marked-alt     fa-lg ml-2" aria-hidden="true"></i><br />  Mapa           </h5> </button>
+    }
+    @if (Model.TablaExistencias.TieneImagenes)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Imagenes')">    <h5><i class="fas  fa-photo-video        fa-lg ml-2" aria-hidden="true"></i><br />  Imagenes       </h5> </button>
+    }
+    @if (Model.TablaExistencias.TieneArchivos)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Archivos')">    <h5><i class="fas  fa-cloud-download-alt fa-lg ml-2" aria-hidden="true"></i><br />  Archivos       </h5> </button>
+    }
+    @if (Model.TablaExistencias.TieneCercanos)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Cercanos')">    <h5><i class="fas  fa-expand-arrows-alt  fa-lg ml-2" aria-hidden="true"></i><br />  Alrededores    </h5> </button>
+    }
+    @if (Model.TablaExistencias.TieneTags)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Etiquetas')">   <h5><i class="fas  fa-tags               fa-lg ml-2" aria-hidden="true"></i><br />  Etiquetas      </h5> </button>
+    }
+    @if (Model.TablaExistencias.TieneMeteo)
+    {
+        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Meteo')">       <h5><i class="fas  fa-cloud-sun          fa-lg ml-2" aria-hidden="true"></i><br />  Meteo          </h5> </button>
+    }
     </div>
-</div>
 <br />
-<div id="dvArchivosPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando Archivos....</span>
+<div id="Presentador" class="h-100">
+    <div id="Principal" class="Pantalla">
+        @await Html.PartialAsync("_DatosRuta", @Model)
+    </div>
+    <div id="Mapa" class="Pantalla" style="display:none">
+        @if (Model.TablaExistencias.TieneMapa)
+        {
+            @await Html.PartialAsync("_VisorRuta", @Model)
+            <div id="mapid" class="d-block w-100" style="height: 400px">Cargando Ubicación...</div>
+        }
+        @if (Model.TablaExistencias.TieneAltimetrias)
+        {
+            @await Html.PartialAsync("_PerfilDeRuta", @Model)
+        }
+    </div>
+    <div id="Imagenes" class="Pantalla" style="display:none">
+        <div id="dvImagenesPostBind">
+            <div class="loaderCenter">
+                <span class="loadingText">Buscando Imagenes....</span>
+            </div>
+        </div>
+    </div>
+    <div id="Archivos" class="Pantalla" style="display:none">
+        <div id="dvArchivosPostBind">
+            <div class="loaderCenter">
+                <span class="loadingText">Buscando Archivos....</span>
+            </div>
+        </div>
+    </div>
+    <div id="Cercanos" class="Pantalla" style="display:none">
+        <div id="dvCercanosPostBind">
+            <div class="loaderCenter">
+                <span class="loadingText">Buscando cercanos....</span>
+            </div>
+        </div>
+    </div>
+    <div id="Etiquetas" class="Pantalla" style="display:none">
+        <div id="dvRelacionadosPostBind">
+            <div class="loaderCenter">
+                <span class="loadingText">Buscando relacionados....</span>
+            </div>
+        </div>
+    </div>
+    <div id="Meteo" class="Pantalla" style="display:none">
+        @await Html.PartialAsync("_Meteo", @Model.IdElemento)
     </div>
 </div>
-<br />
-<div id="dvCercanosPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando cercanos....</span>
-    </div>
-</div>
-<br />
-<div id="dvRelacionadosPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando relacionados....</span>
-    </div>
-</div>
-
 <script type="text/javascript">
+    function ShowPantalla(pantallaVisible) {
+        $(".Pantalla").hide();
+        $("#" + pantallaVisible).show();
+        switch (pantallaVisible) {
+            case 'Datos':
+                break;
+            case 'Mapa':  
+                if(@Model.TablaExistencias.TieneMapa.ToString().ToLower())
+                    LoadMapa();
+                if(@Model.TablaExistencias.TieneAltimetrias.ToString().ToLower())
+                    LoadPerfil();
+                break;
+            case 'Imagenes':  
+                LoadImagenes();
+                break;
+            case 'Archivos':
+                LoadArchivos();
+                break;
+            case 'Cercanos':
+                LoadCercanos();
+                break;
+            case 'Etiquetas':
+                LoadRelacionados();
+                break;
+            case 'Meteo':  
+                SetMeteoble();
+                break;
+        }
+    }
+
     function LoadImagenes()
     {
         $.ajax
@@ -151,33 +225,50 @@
             datatype: "html",
             success: function(t)
             {
-                var mymap = L.map('mapid').setView([t.intermedioLat , t.intermedioLon], 13);
-                var puntos = JSON.parse(t.puntos);
-                L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-                    maxZoom: 18,
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-                        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                    id: 'mapbox/streets-v11',
-                    tileSize: 512,
-                    zoomOffset: -1
-                }).addTo(mymap);
-                var polyline = L.polyline(puntos, { color: 'red' }).addTo(mymap);
-                mymap.fitBounds(polyline.getBounds());
+                if (t.length > 0) {
+                    var mymap = L.map('mapid').setView([t[0].intermedioLat , t[0].intermedioLon], 13);
+                    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                        maxZoom: 18,
+                        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                        id: 'mapbox/streets-v11',
+                        tileSize: 512,
+                        zoomOffset: -1
+                    }).addTo(mymap);
+                    var colors = [
+                          '#ff0000'//Rojo
+                        , '#0000ff'//Azul
+                        , '#003300'//Verde Oscuro
+                        , '#000000'//Negro
+                        , '#660066'//Violeta
+                        , '#ff00ff'//Fucsia
+                        , '#003366'//AzulMarino
+                        , '#663300'//Marron
+                        , '#ff3300'//Naranja
+                        , '#3399ff'//AzulClaro
+                        , '#ff9999'//RosaClaro
+                        , '#ffffff'//Blanco
+                    ];
+                    var polyline;
+                    for (var i = 0; i < t.length && i < colors.length; i++) {
+                        var puntos = JSON.parse(t[i].puntos);
+                        var polyline = L.polyline(puntos, { color: colors[i] }).addTo(mymap);
+                    }
+                    mymap.fitBounds(polyline.getBounds());
+                }
+                else {
+                    $("#dvRelacionadosPostBind").html("No hay Datos");
+                }
             },
             error: function()
             {
-                $("#dvRelacionadosPostBind").html("Datos no encontrados")
+                $("#dvRelacionadosPostBind").html("Datos no encontrados");
             }
         })
     }
     $(document).ready(function()
     {
-        LoadMapa();
-        LoadPerfil();
-        LoadImagenes();
-        LoadArchivos();
-        LoadCercanos();
-        LoadRelacionados();
+        ShowPantalla('Principal');
     });
-</script>
+    </script>
 

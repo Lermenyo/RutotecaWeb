@@ -1,22 +1,20 @@
 ﻿@model List<CercanoDTO>
-<h4>Alrededores</h4>
 <div class="list-group">
-
     @foreach (var item in Model)
     {
-    <a href="@item.Permalink" class="list-group-item list-group-item-action flex-column align-items-start">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">@item.Nombre</h5>
-        </div>
-        @if (item.IdTipoElemento != 4) //Monumento
-        {
-            <p class="mb-1">@item.DescripcionCorta <small> a @item.Metros metros</small></p>
-        }
-        else
-        { 
-            <small> a @item.Metros metros</small>
-        }
+        <a href="@item.Permalink" class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">@item.Nombre</h5><div id="@String.Concat("marcadorElemento", item.IdElementoRuta)" class="float-right"></div>
+            </div>
+            @if (item.IdTipoElemento != 4) //Monumento
+            {
+                <p class="mb-1">@item.DescripcionCorta <small> a @item.Metros metros</small></p>
+            }
+            else
+            {
+                <small> a @item.Metros metros</small>
+            }
 
-    </a>
+        </a>
     }
 </div>

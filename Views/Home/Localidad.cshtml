@@ -6,15 +6,32 @@
 <h4>
     @Html.DisplayFor(model => model.DescripcionCorta)
 </h4>
-<div id="dvCercanosPostBind">
-    <div class="loaderCenter">
-        <span class="loadingText">Buscando cercanos....</span>
+<div id="Botonera" class="h-25">
+    <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Cercanos')">    <h5><i class="fas  fa-route              fa-lg ml-2" aria-hidden="true"></i><br />  Rutas          </h5> </button>
+    <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Meteo')">       <h5><i class="fas  fa-cloud-sun          fa-lg ml-2" aria-hidden="true"></i><br />  Meteo          </h5> </button>
+</div>
+<br/>
+<div id="Presentador" class="h-100">
+    <div id="Cercanos" class="Pantalla">
+        <div id="dvCercanosPostBind">
+            <div class="loaderCenter">
+                <span class="loadingText">Buscando cercanos....</span>
+            </div>
+        </div>
+        <br />
+        <div id="mapid" style="width: 100%; height: 400px;">Cargando Ubicación...</div>
+    </div>
+    <div id="Meteo" class="Pantalla" style="display:none">
+        @await Html.PartialAsync("_Meteo", @Model.IdElemento)
     </div>
 </div>
-<br />
-<div id="mapid" style="width: 100%; height: 400px;">Cargando Ubicación...</div>
-@await Html.PartialAsync("_Meteo", @Model.IdElemento)
 <script type="text/javascript">
+    function ShowPantalla(pantallaVisible) {
+        $(".Pantalla").hide();
+        $("#" + pantallaVisible).show();
+    }
+
+
     function LoadCercanos()
     {
         $.ajax
@@ -32,6 +49,51 @@
             error: function()
             {
                 $("#dvCercanosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
+
+    function LoadTracksMapa(mymap)
+    {
+        $.ajax
+            ({
+                url: "/Home/GetTracksLugar",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                if (t.length > 0) {
+                    var colors = [
+                          '#ff0000'//Rojo
+                        , '#0000ff'//Azul
+                        , '#ff9999'//RosaClaro
+                        , '#003300'//Verde Oscuro
+                        , '#ff00ff'//Fucsia
+                        , '#ff3300'//Naranja
+                        , '#000000'//Negro
+                        , '#660066'//Violeta
+                        , '#003366'//AzulMarino
+                        , '#663300'//Marron
+                        , '#3399ff'//AzulClaro
+                        , '#ffffff'//Blanco
+                    ];
+                    var polyline;
+                    for (var i = 0; i < t.length && i < colors.length; i++) {
+                        var puntos = JSON.parse(t[i].puntos);
+                        var polyline = L.polyline(puntos, { color: colors[i] }).addTo(mymap);
+                        $("#marcadorElemento" + t[i].idElementoRuta).append("<i style='color:" + colors[i] + "' class='fas fa-bookmark fa-lg ml-1'></i>");
+                    }
+                }
+                else {
+                    $("#dvRelacionadosPostBind").html("No hay Datos");
+                }
+            },
+            error: function()
+            {
+                $("#dvRelacionadosPostBind").html("Datos no encontrados");
             }
         })
     }
@@ -60,6 +122,7 @@
                 }).addTo(mymap);
 
                 L.marker([t.latitud, t.longitud]).addTo(mymap);
+                LoadTracksMapa(mymap);
             },
             error: function()
             {

@@ -1,9 +1,8 @@
 ﻿@model int
-<br />
-<button type="button" class="btn btn-dark btn-lg" onclick="SetMeteoble()">Meteoblue</button>
-<button type="button" class="btn btn-dark btn-lg" onclick="SetMapa()">Mapa</button>
-<button type="button" class="btn btn-dark btn-lg" onclick="SetAEMET()">AEMET</button>
-<br />
+<div id="Botonera" class="h-25">
+    <button type="button" class="btn btn-light w-25 h-100 m-1" onclick="SetMeteoble()"><h5><i class="fas fa-thermometer-three-quarters fa-lg" aria-hidden="true"></i> Predicción </h5> </button>
+    <button type="button" class="btn btn-light w-25 h-100 m-1" onclick="SetMapa()"><h5><i class="fas fa-wind fa-lg" aria-hidden="true"></i> Vientos </h5> </button>
+</div>
 <br />
 <div id="dvMeteo">
     <div class="loaderCenter">

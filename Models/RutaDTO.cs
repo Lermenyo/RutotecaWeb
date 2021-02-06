@@ -34,6 +34,8 @@ namespace RutotecaWeb.Models
 
         public IList<CercanoDTO> Cecanos { get; set; }
 
+        public TablaExistenciasDTO TablaExistencias { get; set; }
+
         public RutaDTO()
         {
             Cecanos = new List<CercanoDTO>();
