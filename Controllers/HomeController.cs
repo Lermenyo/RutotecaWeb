@@ -124,6 +124,22 @@ namespace RutotecaWeb.Controllers
         }
 
         [HttpGet]
+        public ActionResult GetArchivos(int id)
+        {
+            var _archivos = _dapper.GetAll<ArchivosDTO>($"select * FROM vwArchivos where IdElemento ={id}", null, commandType: CommandType.Text);
+            return PartialView("_ListaArchivos", _archivos);
+        }
+
+        [HttpGet]
+        public ActionResult GetImagenes(int id)
+        {
+            //https://documentos.rutoteca.es/SL-CV-0168/perfil_302.jpg
+            var _imagenes = _dapper.GetAll<ImagenesDTO>($"select * FROM vwImagenes where IdElemento ={id}", null, commandType: CommandType.Text);
+            return PartialView("_CarruselImagenes", _imagenes);
+        }
+
+
+        [HttpGet]
         public JsonResult GetPuntoElemento(int id)
         {
             return Json(GetPuntoByIdElemento(id));
@@ -154,6 +170,18 @@ namespace RutotecaWeb.Controllers
             var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
             return PartialView("_ListaRelacionados", _cecanos);
         }
+
+        [HttpGet]
+        public MapaDTO GetMapa(int id)
+        {
+            var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+
+            if (_datosMapa != null && _datosMapa.Count > 0)
+                return _datosMapa[0];
+            else
+                return null;
+        }
+
 
         [HttpGet]
         public ActionResult GetMeteoblueMapa(int id)

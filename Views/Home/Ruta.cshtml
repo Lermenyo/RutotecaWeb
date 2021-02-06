@@ -25,60 +25,26 @@
 <h2>
     @Html.DisplayFor(model => model.Nombre)
 </h2>
-<ul>
-    @if (Model.Longitud.HasValue)
-    {
-        <li>
-            <b>Longitud: </b> @Html.DisplayFor(model => model.Longitud) km
-        </li>
-    }
-    @if (Model.IBP.HasValue)
-    {
-        <li>
-            <b>IBP: </b> @Html.DisplayFor(model => model.IBP)
-        </li>
-    }
-    @if (Model.Ascenso.HasValue)
-    {
-        <li>
-            <b>Ascenso Acumulado: </b> @Html.DisplayFor(model => model.Ascenso) metros
-        </li>
-    }
-    @if (Model.Descenso.HasValue)
-    {
-        <li>
-            <b>Descenso Acumulado: </b> @Html.DisplayFor(model => model.Descenso) metros
-        </li>
-    }
-    @if (!String.IsNullOrEmpty(Model.Dificultad))
-    {
-        <li>
-            <b>Dificultad: </b> @Html.DisplayFor(model => model.Dificultad)
-        </li>
-    }
 
-    @if (!String.IsNullOrEmpty(Model.Duracion))
-    {
-        <li>
-            <b>Duración: </b> @Html.DisplayFor(model => model.Duracion)
-        </li>
-    }
+@await Html.PartialAsync("_DatosRuta", @Model)
+@await Html.PartialAsync("_VisorRuta", @Model)
 
-    @if (Model.Circular.HasValue)
-    {
-        <li>
-            @if (Model.Circular.Value)
-            {
-                <b>Ruta Circular</b>
-            }
-            else
-            {
-                <b>Ruta Lineal</b>
-            }
-        </li>
-    }
-</ul>
+
+
+<div id="mapid" class="d-block w-100" style="height: 400px">Cargando Ubicación...</div>
 @await Html.PartialAsync("_PerfilDeRuta", @Model)
+<div id="dvImagenesPostBind">
+    <div class="loaderCenter">
+        <span class="loadingText">Buscando Imagenes....</span>
+    </div>
+</div>
+<br />
+<div id="dvArchivosPostBind">
+    <div class="loaderCenter">
+        <span class="loadingText">Buscando Archivos....</span>
+    </div>
+</div>
+<br />
 <div id="dvCercanosPostBind">
     <div class="loaderCenter">
         <span class="loadingText">Buscando cercanos....</span>
@@ -92,6 +58,46 @@
 </div>
 
 <script type="text/javascript">
+    function LoadImagenes()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetImagenes",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvImagenesPostBind").html(t)
+            },
+            error: function()
+            {
+                $("#dvImagenesPostBind").html("Datos no encontrados")
+            }
+        })
+    }
+    function LoadArchivos()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetArchivos",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvArchivosPostBind").html(t)
+            },
+            error: function()
+            {
+                $("#dvArchivosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
     function LoadCercanos()
     {
         $.ajax
@@ -133,34 +139,45 @@
         })
     }
 
-    //function CreateMap() {
-	   // var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-
-	   // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		  //  maxZoom: 18,
-		  //  attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-			 //   'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-		  //  id: 'mapbox/streets-v11',
-		  //  tileSize: 512,
-		  //  zoomOffset: -1
-	   // }).addTo(mymap);
-
-	   // function onMapClick(e) {
-		  //  popup
-			 //   .setLatLng(e.latlng)
-			 //   .setContent("You clicked the map at " + e.latlng.toString())
-			 //   .openOn(mymap);
-	   // }
-
-	   // mymap.on('click', onMapClick);
-    //}
-
+    function LoadMapa()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetMapa",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.Id},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                var mymap = L.map('mapid').setView([t.intermedioLat , t.intermedioLon], 13);
+                var puntos = JSON.parse(t.puntos);
+                L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                    maxZoom: 18,
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    id: 'mapbox/streets-v11',
+                    tileSize: 512,
+                    zoomOffset: -1
+                }).addTo(mymap);
+                var polyline = L.polyline(puntos, { color: 'red' }).addTo(mymap);
+                mymap.fitBounds(polyline.getBounds());
+            },
+            error: function()
+            {
+                $("#dvRelacionadosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
     $(document).ready(function()
     {
+        LoadMapa();
         LoadPerfil();
+        LoadImagenes();
+        LoadArchivos();
         LoadCercanos();
         LoadRelacionados();
-        //CreateMap();
     });
 </script>
 

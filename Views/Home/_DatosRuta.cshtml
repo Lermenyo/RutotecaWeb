@@ -1,0 +1,54 @@
+﻿@model RutotecaWeb.Models.RutaDTO
+<ul>
+    @if (Model.Longitud.HasValue)
+    {
+        <li>
+            <b>Longitud: </b> @Html.DisplayFor(model => model.Longitud) km
+        </li>
+    }
+    @if (Model.IBP.HasValue)
+    {
+        <li>
+            <b>IBP: </b> @Html.DisplayFor(model => model.IBP)
+        </li>
+    }
+    @if (Model.Ascenso.HasValue)
+    {
+        <li>
+            <b>Ascenso Acumulado: </b> @Html.DisplayFor(model => model.Ascenso) metros
+        </li>
+    }
+    @if (Model.Descenso.HasValue)
+    {
+        <li>
+            <b>Descenso Acumulado: </b> @Html.DisplayFor(model => model.Descenso) metros
+        </li>
+    }
+    @if (!String.IsNullOrEmpty(Model.Dificultad))
+    {
+        <li>
+            <b>Dificultad: </b> @Html.DisplayFor(model => model.Dificultad)
+        </li>
+    }
+
+    @if (!String.IsNullOrEmpty(Model.Duracion))
+    {
+        <li>
+            <b>Duración: </b> @Html.DisplayFor(model => model.Duracion)
+        </li>
+    }
+
+    @if (Model.Circular.HasValue)
+    {
+        <li>
+            @if (Model.Circular.Value)
+            {
+                <b>Ruta Circular</b>
+            }
+            else
+            {
+                <b>Ruta Lineal</b>
+            }
+        </li>
+    }
+</ul>
