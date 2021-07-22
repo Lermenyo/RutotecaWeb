@@ -1,6 +1,6 @@
 ﻿@model RutotecaWeb.Models.RutaDTO
 
-<h1>
+<h1 class="h3">
     @Html.DisplayFor(model => model.CodigoTipo)  @Html.DisplayFor(model => model.CodigoLugar)
     @if (!String.IsNullOrEmpty(Model.Version))
     {
@@ -22,85 +22,91 @@
         }
     }
 </h1>
-<h2>
+<h2 class="h4">
     @Html.DisplayFor(model => model.Nombre)
 </h2>
 
-<div id="Botonera" class="h-25">
-    <button type="button" class="btn btn-light  m-1 mh-100" onclick="ShowPantalla('Principal')">  <h5><i class="fas  fa-route              fa-lg ml-2" aria-hidden="true"></i><br />  Datos          </h5> </button>
+<div id="Botonera">
+    <button type="button" style="text-align:center" class="btn btn-light  m-1 mh-100" onclick="ShowPantalla('Principal')"><i class="fas  fa-route              fa-2x" aria-hidden="true"></i><br />Prin.</button>
     @if (Model.TablaExistencias.TieneMapa || Model.TablaExistencias.TieneAltimetrias)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Mapa')">        <h5><i class="fas  fa-map-marked-alt     fa-lg ml-2" aria-hidden="true"></i><br />  Mapa           </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Mapa')"><i class="fas  fa-map-marked-alt       fa-2x" aria-hidden="true"></i><br />Mapa</button>
     }
     @if (Model.TablaExistencias.TieneImagenes)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Imagenes')">    <h5><i class="fas  fa-photo-video        fa-lg ml-2" aria-hidden="true"></i><br />  Imagenes       </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Imagenes')"><i class="fas  fa-photo-video      fa-2x" aria-hidden="true"></i><br />Imgs.</button>
     }
     @if (Model.TablaExistencias.TieneArchivos)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Archivos')">    <h5><i class="fas  fa-cloud-download-alt fa-lg ml-2" aria-hidden="true"></i><br />  Archivos       </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Archivos')"><i class="fas  fa-cloud-download-alt fa-2x" aria-hidden="true"></i><br />Doc.</button>
     }
     @if (Model.TablaExistencias.TieneCercanos)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Cercanos')">    <h5><i class="fas  fa-expand-arrows-alt  fa-lg ml-2" aria-hidden="true"></i><br />  Alrededores    </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Cercanos')"><i class="fas  fa-expand-arrows-alt  fa-2x" aria-hidden="true"></i><br />Alrd.</button>
     }
     @if (Model.TablaExistencias.TieneTags)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Etiquetas')">   <h5><i class="fas  fa-tags               fa-lg ml-2" aria-hidden="true"></i><br />  Etiquetas      </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Etiquetas')"><i class="fas  fa-tags               fa-2x" aria-hidden="true"></i><br />Etiq.</button>
     }
     @if (Model.TablaExistencias.TieneMeteo)
     {
-        <button type="button" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Meteo')">       <h5><i class="fas  fa-cloud-sun          fa-lg ml-2" aria-hidden="true"></i><br />  Meteo          </h5> </button>
+        <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('Meteo')"><i class="fas  fa-cloud-sun          fa-2x" aria-hidden="true"></i><br />Clim.</button>
     }
-    </div>
-<br />
-<div id="Presentador" class="h-100">
-    <div id="Principal" class="Pantalla">
-        @await Html.PartialAsync("_DatosRuta", @Model)
-    </div>
-    <div id="Mapa" class="Pantalla" style="display:none">
-        @if (Model.TablaExistencias.TieneMapa)
-        {
-            @await Html.PartialAsync("_VisorRuta", @Model)
-            <div id="mapid" class="d-block w-100" style="height: 400px">Cargando Ubicación...</div>
-        }
-        @if (Model.TablaExistencias.TieneAltimetrias)
-        {
-            @await Html.PartialAsync("_PerfilDeRuta", @Model)
-        }
-    </div>
-    <div id="Imagenes" class="Pantalla" style="display:none">
-        <div id="dvImagenesPostBind">
-            <div class="loaderCenter">
-                <span class="loadingText">Buscando Imagenes....</span>
+    <button type="button" style="text-align:center" class="btn btn-light m-1 mh-100" onclick="ShowPantalla('GPX')"><i class="fas  fa-location-arrow          fa-2x" aria-hidden="true"></i><br />GPX</button>
+    <div id="Presentador" class="h-100 ml-1">
+        <div id="Principal" class="Pantalla">
+            @await Html.PartialAsync("_DatosRuta", @Model)
+        </div>
+        <div id="Mapa" class="Pantalla" style="display:none">
+            @if (Model.TablaExistencias.TieneMapa)
+            {
+                @await Html.PartialAsync("_VisorRuta", @Model)
+                <div id="mapid" class="d-block w-100" style="height: 400px">Cargando Ubicación...</div>
+            }
+            @if (Model.TablaExistencias.TieneAltimetrias)
+            {
+                @await Html.PartialAsync("_PerfilDeRuta", @Model)
+            }
+        </div>
+        <div id="Imagenes" class="Pantalla" style="display:none">
+            <div id="dvImagenesPostBind">
+                <div class="loaderCenter">
+                    <span class="loadingText">Buscando Imagenes....</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="Archivos" class="Pantalla" style="display:none">
-        <div id="dvArchivosPostBind">
-            <div class="loaderCenter">
-                <span class="loadingText">Buscando Archivos....</span>
+        <div id="Archivos" class="Pantalla" style="display:none">
+            <div id="dvArchivosPostBind">
+                <div class="loaderCenter">
+                    <span class="loadingText">Buscando Archivos....</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="Cercanos" class="Pantalla" style="display:none">
-        <div id="dvCercanosPostBind">
-            <div class="loaderCenter">
-                <span class="loadingText">Buscando cercanos....</span>
+        <div id="Cercanos" class="Pantalla" style="display:none">
+            <div id="dvCercanosPostBind">
+                <div class="loaderCenter">
+                    <span class="loadingText">Buscando cercanos....</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="Etiquetas" class="Pantalla" style="display:none">
-        <div id="dvRelacionadosPostBind">
-            <div class="loaderCenter">
-                <span class="loadingText">Buscando relacionados....</span>
+        <div id="Etiquetas" class="Pantalla" style="display:none">
+            <div id="dvRelacionadosPostBind">
+                <div class="loaderCenter">
+                    <span class="loadingText">Buscando relacionados....</span>
+                </div>
             </div>
         </div>
+        <div id="GPX" class="Pantalla" style="display:none">
+            <div id="dvTracksPostBind">
+                <div class="loaderCenter">
+                    <span class="loadingText">Buscando Tracks....</span>
+                </div>
+            </div>
+        </div>
+        <div id="Meteo" class="Pantalla" style="display:none">
+            @await Html.PartialAsync("_Meteo", @Model.IdElemento)
+        </div>
     </div>
-    <div id="Meteo" class="Pantalla" style="display:none">
-        @await Html.PartialAsync("_Meteo", @Model.IdElemento)
-    </div>
-</div>
 <script type="text/javascript">
     function ShowPantalla(pantallaVisible) {
         $(".Pantalla").hide();
@@ -108,13 +114,13 @@
         switch (pantallaVisible) {
             case 'Datos':
                 break;
-            case 'Mapa':  
+            case 'Mapa':
                 if(@Model.TablaExistencias.TieneMapa.ToString().ToLower())
                     LoadMapa();
                 if(@Model.TablaExistencias.TieneAltimetrias.ToString().ToLower())
                     LoadPerfil();
                 break;
-            case 'Imagenes':  
+            case 'Imagenes':
                 LoadImagenes();
                 break;
             case 'Archivos':
@@ -126,8 +132,11 @@
             case 'Etiquetas':
                 LoadRelacionados();
                 break;
-            case 'Meteo':  
+            case 'Meteo':
                 SetMeteoble();
+                break;
+            case 'GPX':
+                LoadGPX();
                 break;
         }
     }
@@ -169,6 +178,26 @@
             error: function()
             {
                 $("#dvArchivosPostBind").html("Datos no encontrados")
+            }
+        })
+    }
+    function LoadGPX()
+    {
+        $.ajax
+            ({
+                url: "/Home/GetTracks",
+                contentType: "application/html; charset=utf-8",
+                data: {id:@Model.IdElemento},
+            type: "GET",
+            //cache: !0,
+            datatype: "html",
+            success: function(t)
+            {
+                $("#dvTracksPostBind").html(t)
+            },
+            error: function()
+            {
+                $("#dvTracksPostBind").html("Datos no encontrados")
             }
         })
     }
@@ -270,5 +299,5 @@
     {
         ShowPantalla('Principal');
     });
-    </script>
+</script>
 

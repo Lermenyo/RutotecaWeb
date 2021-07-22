@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -140,6 +141,15 @@ namespace RutotecaWeb.Controllers
         }
 
 
+
+        [HttpGet]
+        public ActionResult GetTracks(int id)
+        {
+            ///home/getgpx/
+            var _tracks = _dapper.GetAll<TracksListadoDTO>(TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
+            return PartialView("_ListaTracks", _tracks);
+        }
+
         [HttpGet]
         public JsonResult GetPuntoElemento(int id)
         {
@@ -182,6 +192,21 @@ namespace RutotecaWeb.Controllers
             else
                 return new List<MapaDTO>();
         }
+        //https://localhost:5001/home/getgpx/538
+        [HttpGet]
+        public ActionResult GetGPX(int id)
+        {
+            MemoryStream ms = new MemoryStream();
+            Tracks tracks = _dapper.Get<Tracks>(Tracks.SELECT_COMPLETA + $" WHERE Id = {id}", null, commandType: CommandType.Text);
+            tracks.GpxMetadata.AddRange(_dapper.GetAll<GpxMetadata>(GpxMetadata.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
+            tracks.GpxPoint.AddRange(_dapper.GetAll<GpxPoint>(GpxPoint.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
+            //TODO: Segmentos?
+            //TODO: WayPoints?
+            var servicioGPX = new Services.GestorGpx(tracks);
+            servicioGPX.SaveInStream(ms);
+            return File(ms.ToArray(), "application/gpx+xml", "track.gpx");
+        }
+
         [HttpGet]
         public List<TrackLugarDTO> GetTracksLugar(int id)
         {

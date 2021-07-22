@@ -1,0 +1,12 @@
+﻿@model List<TracksListadoDTO>
+<h4>Tracks</h4>
+<div class="list-group">
+    @foreach (var item in Model)
+    {
+    <a href="/home/getgpx/@item.Id" class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">Track</h5>
+        </div>
+    </a>
+    }
+</div>
