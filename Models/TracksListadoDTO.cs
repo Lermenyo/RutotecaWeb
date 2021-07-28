@@ -17,6 +17,7 @@ namespace RutotecaWeb.Models
         public Decimal Descenso     { get; set; }
         public Decimal KmSubida     { get; set; }
         public DateTime Tiempo      { get; set; }
+        public String Color         { get; set; }
 
         public static string SELECT_COMPLETA =
             "SELECT T1.[Id]     AS ID,	        " +

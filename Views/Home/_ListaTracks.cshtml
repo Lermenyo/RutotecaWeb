@@ -1,12 +1,15 @@
 ﻿@model List<TracksListadoDTO>
-<h4>Tracks</h4>
-<div class="list-group">
+<br />
+<div class="container">
     @foreach (var item in Model)
     {
-    <a href="/home/getgpx/@item.Id" class="list-group-item list-group-item-action flex-column align-items-start">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">Track</h5>
+    <div class="row border mb-2 p-2 container" style="color:@item.Color">
+        <div class="container w-100">
+            <i class="fas fa-1x fa-route col-1"></i>
+            <a href="/home/getgpx/@item.Id" class="col-12 " title="Descargar GPX" style="color:@item.Color">                          <i class="fas   fa-1x   fa-cloud-download-alt  mr-2"></i><span>Descargar Track</span></a>
+            @*<a href=""                          class="col-2 text-success"      title="ver/ocultar">                            <i class="fas   fa-2x   fa-eye"></i>                </a>
+            <a href=""                          class="col-2 text-info"         title="Información">                            <i class="fas   fa-2x   fa-info-circle"></i>        </a>*@
         </div>
-    </a>
+    </div>
     }
 </div>

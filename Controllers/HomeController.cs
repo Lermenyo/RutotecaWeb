@@ -140,13 +140,29 @@ namespace RutotecaWeb.Controllers
             return PartialView("_CarruselImagenes", _imagenes);
         }
 
-
-
         [HttpGet]
         public ActionResult GetTracks(int id)
         {
+            var colors = new List<string>() {
+                  "#ff0000"//Rojo
+                , "#0000ff"//Azul
+                , "#003300"//Verde Oscuro
+                , "#000000"//Negro
+                , "#660066"//Violeta
+                , "#ff00ff"//Fucsia
+                , "#003366"//AzulMarino
+                , "#663300"//Marron
+                , "#ff3300"//Naranja
+                , "#3399ff"//AzulClaro
+                , "#ff9999"//RosaClaro
+                , "#ffffff"//Blanco
+            };
+
+
+
             ///home/getgpx/
             var _tracks = _dapper.GetAll<TracksListadoDTO>(TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
+            _tracks.ForEach(t => {t.Color = colors[_tracks.IndexOf(t)];});
             return PartialView("_ListaTracks", _tracks);
         }
 
@@ -155,8 +171,7 @@ namespace RutotecaWeb.Controllers
         {
             return Json(GetPuntoByIdElemento(id));
         }
-
-        
+                
         public PuntoMapa GetPuntoByIdElemento(int id)
         {
             return _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
@@ -192,6 +207,18 @@ namespace RutotecaWeb.Controllers
             else
                 return new List<MapaDTO>();
         }
+
+        [HttpGet]
+        public List<MapaDTO> GetMapaTracks(int id)
+        {
+            var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+
+            if (_datosMapa != null && _datosMapa.Count > 0)
+                return _datosMapa;
+            else
+                return new List<MapaDTO>();
+        }
+
         //https://localhost:5001/home/getgpx/538
         [HttpGet]
         public ActionResult GetGPX(int id)
