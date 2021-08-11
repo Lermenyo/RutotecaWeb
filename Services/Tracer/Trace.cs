@@ -96,22 +96,38 @@ namespace RutotecaWeb.Services
             _config = config;
         }
         public int GetAcceso(HttpRequest request) {
-            var ip = request.HttpContext.Connection.RemoteIpAddress;
-            var agente = request.Headers["User-Agent"].ToString() ?? String.Empty;
-            var accept = request.Headers["Accept"].ToString() ?? String.Empty;
-            var encoding = request.Headers["Accept-Encoding"].ToString() ?? String.Empty;
-            var languaje = request.Headers["Accept-Language"].ToString() ?? String.Empty;
-            var id = SearchAcceso(ip.ToString(),  encoding, languaje, agente, accept);
-            if (id < 0)
+            try
             {
-                InsertAcceso(ip.ToString(),  encoding, languaje, agente, accept);
-                id = SearchAcceso(ip.ToString(),  encoding, languaje, agente, accept);
+                var ip = request.HttpContext.Connection.RemoteIpAddress;
+                var agente = request.Headers["User-Agent"].ToString() ?? String.Empty;
+                var accept = request.Headers["Accept"].ToString() ?? String.Empty;
+                var encoding = request.Headers["Accept-Encoding"].ToString() ?? String.Empty;
+                var languaje = request.Headers["Accept-Language"].ToString() ?? String.Empty;
+                var id = SearchAcceso(ip.ToString(), encoding, languaje, agente, accept);
+                if (id < 0)
+                {
+                    InsertAcceso(ip.ToString(), encoding, languaje, agente, accept);
+                    id = SearchAcceso(ip.ToString(), encoding, languaje, agente, accept);
+                }
+                return id;
             }
-            return id;
+            catch (Exception ex)
+            {
+                InsertException(ex, -100);
+                return -1;
+            }
         }
 
-        public void SetTraza(string mensaje, int acceso = -1, Nivel nivel = 0, SubNivel subNivel = 0, int elemento = 0, SubElemento  subElemento = 0, Terciario terciario = 0, Accion accion = 0, SubAccion subAccion = 0) {
-            InsertTraza(mensaje, acceso, nivel, subNivel, elemento, subElemento, terciario, accion, subAccion);
+        public void SetTraza(string mensaje, int acceso = -1, Nivel nivel = 0, SubNivel subNivel = 0, int elemento = 0, SubElemento  subElemento = 0, Terciario terciario = 0, Accion accion = 0, SubAccion subAccion = 0)
+        {
+            try
+            {
+                InsertTraza(mensaje, acceso, nivel, subNivel, elemento, subElemento, terciario, accion, subAccion);
+            }
+            catch (Exception ex)
+            {
+                InsertException(ex, -101);
+            }
         }
 
         private void InsertAcceso(string HTTP_CLIENT_IP,  string HTTP_ACCEPT_ENCODING, string HTTP_ACCEPT_LANGUAGE, string HTTP_USER_AGENT, string HTTP_ACCEPT) {
@@ -170,65 +186,79 @@ namespace RutotecaWeb.Services
 
         public void InsertEntrada(int? acceso, string origen, string destino)
         {
-            using (var connection = new MySql.Data.MySqlClient.MySqlConnection(_config.GetConnectionString(_connectionString)))
-            using (var command = connection.CreateCommand())
+            try
             {
-                command.CommandText = "INSERT INTO movimientos (idAcceso, procedencia, destino) " +
-                    " VALUES ( @idAcceso,@procedencia,@destino);";
+                using (var connection = new MySql.Data.MySqlClient.MySqlConnection(_config.GetConnectionString(_connectionString)))
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "INSERT INTO movimientos (idAcceso, procedencia, destino) " +
+                        " VALUES ( @idAcceso,@procedencia,@destino);";
 
-                command.Parameters.Add("@idAcceso", MySqlDbType.Int16);
-                command.Parameters.Add("@procedencia", MySqlDbType.String);
-                command.Parameters.Add("@destino", MySqlDbType.String);
+                    command.Parameters.Add("@idAcceso", MySqlDbType.Int16);
+                    command.Parameters.Add("@procedencia", MySqlDbType.String);
+                    command.Parameters.Add("@destino", MySqlDbType.String);
 
-                command.Parameters["@idAcceso"].Value = acceso??-1;
-                command.Parameters["@procedencia"].Value = origen;
-                command.Parameters["@destino"].Value = destino;
+                    command.Parameters["@idAcceso"].Value = acceso ?? -1;
+                    command.Parameters["@procedencia"].Value = origen;
+                    command.Parameters["@destino"].Value = destino;
 
-                connection.Open();
-                command.ExecuteNonQuery();
-                connection.Close();
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                InsertException(ex, -102);
             }
         }
 
         public void InsertException(Exception ex, int acceso = -1, int elemento = 0, SubElemento subElemento = 0, Terciario terciario = 0, Accion accion = 0, SubAccion subAccion = 0)
         {
-            SubNivel subNivel = SubNivel.Base;
-            TrazaException traza = new TrazaException(ex);
-
-            if (ex is UriFormatException)
-                subNivel = SubNivel.UriFormatException;
-            if (ex is System.Data.DataException)
-                subNivel = SubNivel.DataException;
-
-            using (var connection = new MySql.Data.MySqlClient.MySqlConnection(_config.GetConnectionString(_connectionString)))
-            using (var command = connection.CreateCommand())
+            try
             {
-                command.CommandText = "INSERT INTO log (IdNivel,IdSubNivel,IdentificadorAcceso,IdElemento,IdSubElemento,IdTerciario,IdAccion,IdSubAccion,Texto) " +
-                    " VALUES ( @IdNivel,@IdSubNivel,@IdentificadorAcceso,@IdElemento,@IdSubElemento,@IdTerciario,@IdAccion,@IdSubAccion,@Texto);";
+                SubNivel subNivel = SubNivel.Base;
+                TrazaException traza = new TrazaException(ex);
 
-                command.Parameters.Add("@IdNivel", MySqlDbType.Int16);
-                command.Parameters.Add("@IdSubNivel", MySqlDbType.Int16);
-                command.Parameters.Add("@IdentificadorAcceso", MySqlDbType.Int16);
-                command.Parameters.Add("@IdElemento", MySqlDbType.Int16);
-                command.Parameters.Add("@IdSubElemento", MySqlDbType.Int16);
-                command.Parameters.Add("@IdTerciario", MySqlDbType.Int16);
-                command.Parameters.Add("@IdAccion", MySqlDbType.Int16);
-                command.Parameters.Add("@IdSubAccion", MySqlDbType.Int16);
-                command.Parameters.Add("@Texto", MySqlDbType.String);
+                if (ex is UriFormatException)
+                    subNivel = SubNivel.UriFormatException;
+                if (ex is System.Data.DataException)
+                    subNivel = SubNivel.DataException;
 
-                command.Parameters["@IdNivel"].Value = (int)Nivel.Error;
-                command.Parameters["@IdSubNivel"].Value = (int)subNivel;
-                command.Parameters["@IdentificadorAcceso"].Value = acceso;
-                command.Parameters["@IdElemento"].Value = elemento;
-                command.Parameters["@IdSubElemento"].Value = (int)subElemento;
-                command.Parameters["@IdTerciario"].Value = (int)terciario;
-                command.Parameters["@IdAccion"].Value = (int)accion;
-                command.Parameters["@IdSubAccion"].Value = (int)subAccion;
-                command.Parameters["@Texto"].Value = LimitSize(JsonConvert.SerializeObject(traza), 5000);
+                using (var connection = new MySql.Data.MySqlClient.MySqlConnection(_config.GetConnectionString(_connectionString)))
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "INSERT INTO log (IdNivel,IdSubNivel,IdentificadorAcceso,IdElemento,IdSubElemento,IdTerciario,IdAccion,IdSubAccion,Texto) " +
+                        " VALUES ( @IdNivel,@IdSubNivel,@IdentificadorAcceso,@IdElemento,@IdSubElemento,@IdTerciario,@IdAccion,@IdSubAccion,@Texto);";
 
-                connection.Open();
-                command.ExecuteNonQuery();
-                connection.Close();
+                    command.Parameters.Add("@IdNivel", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdSubNivel", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdentificadorAcceso", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdElemento", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdSubElemento", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdTerciario", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdAccion", MySqlDbType.Int16);
+                    command.Parameters.Add("@IdSubAccion", MySqlDbType.Int16);
+                    command.Parameters.Add("@Texto", MySqlDbType.String);
+
+                    command.Parameters["@IdNivel"].Value = (int)Nivel.Error;
+                    command.Parameters["@IdSubNivel"].Value = (int)subNivel;
+                    command.Parameters["@IdentificadorAcceso"].Value = acceso;
+                    command.Parameters["@IdElemento"].Value = elemento;
+                    command.Parameters["@IdSubElemento"].Value = (int)subElemento;
+                    command.Parameters["@IdTerciario"].Value = (int)terciario;
+                    command.Parameters["@IdAccion"].Value = (int)accion;
+                    command.Parameters["@IdSubAccion"].Value = (int)subAccion;
+                    command.Parameters["@Texto"].Value = LimitSize(JsonConvert.SerializeObject(traza), 5000);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            catch
+            {
+                
             }
         }
         private int SearchAcceso(string HTTP_CLIENT_IP, string HTTP_ACCEPT_ENCODING, string HTTP_ACCEPT_LANGUAGE, string HTTP_USER_AGENT, string HTTP_ACCEPT)
