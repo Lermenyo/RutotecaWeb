@@ -15,40 +15,68 @@ namespace RutotecaWeb.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IDapper _dapper;
+        private readonly ITrace _traza;
 
-        public HomeController(ILogger<HomeController> logger, IDapper dapper)
+        public HomeController(ILogger<HomeController> logger, IDapper dapper, ITrace trace)
         {
             _logger = logger;
             _dapper = dapper;
+            _traza = trace;
+        }
+
+        private void TrazaAcceso() {
+            if (ViewBag.IdAcceso == null)
+                ViewBag.IdAcceso = _traza.GetAcceso(Request);
         }
 
         [Route("{id}")]
         public async Task<IActionResult> GetByPermalinkAsync(string id)
         {
-            if (!String.IsNullOrEmpty(id))
-            {
-                var _par = new Dapper.DynamicParameters();
-                var _elemento = await Task.FromResult(_dapper.Get<ElementoDTO>($"select * FROM vwPermalink where Permalink='{id}'", null, commandType: CommandType.Text));
-                switch (_elemento.IdTipoElemento)
-                {
-                    case 1:  //Ruta
-                        return await SetRuta(_elemento.Id);
-                    case 2:  //Localidad
-                        return await SetLocalidad(_elemento.Id);
-                    case 3:  //Vertice
-                        return await SetVertice(_elemento.Id);
-                    case 4:  //Monumento
-                    case 5:  //Evento
-                    case 10:  //Etiqueta
-                        return await SetTag(_elemento.Id);
-                    case 20:  //Documento
-                    default:
-                        return View("Index");
-                }
+            TrazaAcceso();
 
+            try
+            {
+                _traza.SetTraza(String.Concat("Acceso: ", id), ViewBag.IdAcceso, Nivel.Info, accion: Accion.GetByPermalink);
+                _traza.InsertEntrada(ViewBag.IdAcceso, Request.Headers["Referer"].ToString(), id);
+
+                if (!String.IsNullOrEmpty(id))
+                {
+                    var _par = new Dapper.DynamicParameters();
+                    var _elemento = await Task.FromResult(_dapper.Get<ElementoDTO>($"select * FROM vwPermalink where Permalink='{id}'", null, commandType: CommandType.Text));
+                    switch (_elemento.IdTipoElemento)
+                    {
+                        case 1:  //Ruta
+                            _traza.SetTraza("Acceso Ruta", ViewBag.IdAcceso,  Nivel.Info, elemento: _elemento.Id, subElemento: SubElemento.Ruta, accion: Accion.GetByPermalink);
+                            return await SetRuta(_elemento.Id);
+                        case 2:  //Localidad
+                            _traza.SetTraza("Acceso Localidad", ViewBag.IdAcceso, Nivel.Info, elemento: _elemento.Id, subElemento: SubElemento.Localidad, accion: Accion.GetByPermalink);
+                            return await SetLocalidad(_elemento.Id);
+                        case 3:  //Vertice
+                            _traza.SetTraza("Acceso Vertice", ViewBag.IdAcceso, Nivel.Info, elemento: _elemento.Id, subElemento: SubElemento.Vertice, accion: Accion.GetByPermalink);
+                            return await SetVertice(_elemento.Id);
+                        case 4:  //Monumento
+                        case 5:  //Evento
+                        case 10:  //Etiqueta
+                            _traza.SetTraza("Acceso Etiqueta", ViewBag.IdAcceso, Nivel.Info, elemento: _elemento.Id, subElemento: SubElemento.Tag, accion: Accion.GetByPermalink);
+                            return await SetTag(_elemento.Id);
+                        case 20:  //Documento
+                        default:
+                            _traza.SetTraza(String.Concat("Elemento no implementado: ", _elemento.IdTipoElemento), ViewBag.IdAcceso, Nivel.Warning, accion: Accion.GetByPermalink);
+                            return View("Index");
+                    }
+
+                }
+                else
+                {
+                    _traza.SetTraza("id Vacio/Nulo => Index", ViewBag.IdAcceso, Nivel.Info, accion: Accion.GetByPermalink);
+                    return View("Index");
+                }
             }
-            else
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.GetByPermalink);
                 return View("Index");
+            }
         }
 
         private async Task<IActionResult> SetRuta(int idElemento)
@@ -106,44 +134,104 @@ namespace RutotecaWeb.Controllers
 
         public JsonResult GetAltimetrias(int id)
         {
-            var datos = _dapper.Get<AtimetriaDTO>($"select * FROM AuxAltimetrias where idRuta = {id}", null, commandType: CommandType.Text);
-            if (datos != null)
-                return Json(System.Text.Json.JsonSerializer.Deserialize<object>(datos.Json));
-            else
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetAltimetrias Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.GetAltimetrias);
+
+            try
+            {
+                var datos = _dapper.Get<AtimetriaDTO>($"select * FROM AuxAltimetrias where idRuta = {id}", null, commandType: CommandType.Text);
+                if (datos != null)
+                    return Json(System.Text.Json.JsonSerializer.Deserialize<object>(datos.Json));
+                else
+                    return Json("NoData");
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex , ViewBag.IdAcceso, accion: Accion.GetAltimetrias);
                 return Json("NoData");
+            }
         }
 
         public async Task<IList<CercanoDTO>> LoadCercanosAsync(int id)
-        { 
-            return await Task.FromResult(_dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text));
+        {
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("LoadCercanosAsync Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.LoadCercanos);
+
+            try
+            {
+                return await Task.FromResult(_dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text));
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.LoadCercanos);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetLugaresCercanos (int id)
         {
-            var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwLugaresEnRuta where ID ={id}", null, commandType: CommandType.Text);
-            return PartialView("_ListaCercanos", _cecanos);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetLugaresCercanos Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.LugaresCercanos);
+
+            try
+            {
+                var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwLugaresEnRuta where ID ={id}", null, commandType: CommandType.Text);
+                return PartialView("_ListaCercanos", _cecanos);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.LugaresCercanos);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetArchivos(int id)
         {
-            var _archivos = _dapper.GetAll<ArchivosDTO>($"select * FROM vwArchivos where IdElemento ={id}", null, commandType: CommandType.Text);
-            return PartialView("_ListaArchivos", _archivos);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetArchivos Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Archivos);
+
+            try
+            {
+                var _archivos = _dapper.GetAll<ArchivosDTO>($"select * FROM vwArchivos where IdElemento ={id}", null, commandType: CommandType.Text);
+                return PartialView("_ListaArchivos", _archivos);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.Archivos);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetImagenes(int id)
         {
-            //https://documentos.rutoteca.es/SL-CV-0168/perfil_302.jpg
-            var _imagenes = _dapper.GetAll<ImagenesDTO>($"select * FROM vwImagenes where IdElemento ={id}", null, commandType: CommandType.Text);
-            return PartialView("_CarruselImagenes", _imagenes);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetImagenes Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Imagenes);
+
+            try
+            {
+                //https://documentos.rutoteca.es/SL-CV-0168/perfil_302.jpg
+                var _imagenes = _dapper.GetAll<ImagenesDTO>($"select * FROM vwImagenes where IdElemento ={id}", null, commandType: CommandType.Text);
+                return PartialView("_CarruselImagenes", _imagenes);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.Imagenes);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetTracks(int id)
         {
-            var colors = new List<string>() {
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetTracks Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Tracks);
+
+            try
+            {
+                var colors = new List<string>() {
                   "#ff0000"//Rojo
                 , "#0000ff"//Azul
                 , "#003300"//Verde Oscuro
@@ -156,22 +244,37 @@ namespace RutotecaWeb.Controllers
                 , "#3399ff"//AzulClaro
                 , "#ff9999"//RosaClaro
                 , "#ffffff"//Blanco
-            };
+                };
 
-
-
-            ///home/getgpx/
-            var _tracks = _dapper.GetAll<TracksListadoDTO>(TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
-            _tracks.ForEach(t => {t.Color = colors[_tracks.IndexOf(t)];});
-            return PartialView("_ListaTracks", _tracks);
+                ///home/getgpx/
+                var _tracks = _dapper.GetAll<TracksListadoDTO>(TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
+                _tracks.ForEach(t => { t.Color = colors[_tracks.IndexOf(t)]; });
+                return PartialView("_ListaTracks", _tracks);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.Tracks);
+                return null;
+            }
         }
 
         [HttpGet]
         public JsonResult GetPuntoElemento(int id)
         {
-            return Json(GetPuntoByIdElemento(id));
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetPuntoElemento Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.PuntoElemento);
+
+            try
+            {
+                return Json(GetPuntoByIdElemento(id));
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.PuntoElemento);
+                return null;
+            }
         }
-                
+
         public PuntoMapa GetPuntoByIdElemento(int id)
         {
             return _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
@@ -180,99 +283,209 @@ namespace RutotecaWeb.Controllers
         [HttpGet]
         public ActionResult GetRutasCercanas(int id)
         {
-            var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwRutasEnLugar where ID ={id}", null, commandType: CommandType.Text);
-            return PartialView("_ListaCercanos", _cecanos);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetRutasCercanas Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.RutasCercanas);
+
+            try
+            {
+                var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwRutasEnLugar where ID ={id}", null, commandType: CommandType.Text);
+                return PartialView("_ListaCercanos", _cecanos);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.RutasCercanas);
+                return null;
+            }
         }
         [HttpGet]
         public ActionResult GetRelacionados(int id)
         {
-            var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwTagsRuta where Id ={id}", null, commandType: CommandType.Text);
-            return PartialView("_ListaRelacionados", _cecanos);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetRelacionados Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Relacionados);
+
+            try
+            {
+                var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwTagsRuta where Id ={id}", null, commandType: CommandType.Text);
+                return PartialView("_ListaRelacionados", _cecanos);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.Relacionados);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetRutasEnTag(int id)
         {
-            var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
-            return PartialView("_ListaRelacionados", _cecanos);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetRutasEnTag Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.RutasEnTag);
+
+            try
+            {
+                var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
+                return PartialView("_ListaRelacionados", _cecanos);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.RutasEnTag);
+                return null;
+            }
         }
 
         [HttpGet]
         public List<MapaDTO> GetMapa(int id)
         {
-            var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetMapa Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Mapa);
 
-            if (_datosMapa != null && _datosMapa.Count > 0)
-                return _datosMapa;
-            else
-                return new List<MapaDTO>();
+            try
+            {
+                var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+
+                if (_datosMapa != null && _datosMapa.Count > 0)
+                    return _datosMapa;
+                else
+                    return new List<MapaDTO>();
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.Mapa);
+                return null;
+            }
         }
 
         [HttpGet]
         public List<MapaDTO> GetMapaTracks(int id)
         {
-            var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetMapaTracks Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.MapaTracks);
 
-            if (_datosMapa != null && _datosMapa.Count > 0)
-                return _datosMapa;
-            else
-                return new List<MapaDTO>();
+            try
+            {
+                var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+
+                if (_datosMapa != null && _datosMapa.Count > 0)
+                    return _datosMapa;
+                else
+                    return new List<MapaDTO>();
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.MapaTracks);
+                return null;
+            }
         }
 
         //https://localhost:5001/home/getgpx/538
         [HttpGet]
         public ActionResult GetGPX(int id)
         {
-            MemoryStream ms = new MemoryStream();
-            Tracks tracks = _dapper.Get<Tracks>(Tracks.SELECT_COMPLETA + $" WHERE Id = {id}", null, commandType: CommandType.Text);
-            tracks.GpxMetadata.AddRange(_dapper.GetAll<GpxMetadata>(GpxMetadata.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
-            tracks.GpxPoint.AddRange(_dapper.GetAll<GpxPoint>(GpxPoint.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
-            //TODO: Segmentos?
-            //TODO: WayPoints?
-            var servicioGPX = new Services.GestorGpx(tracks);
-            servicioGPX.SaveInStream(ms);
-            return File(ms.ToArray(), "application/gpx+xml", "track.gpx");
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetGPX Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.GPX);
+
+            try
+            {
+                MemoryStream ms = new MemoryStream();
+                Tracks tracks = _dapper.Get<Tracks>(Tracks.SELECT_COMPLETA + $" WHERE Id = {id}", null, commandType: CommandType.Text);
+                tracks.GpxMetadata.AddRange(_dapper.GetAll<GpxMetadata>(GpxMetadata.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
+                tracks.GpxPoint.AddRange(_dapper.GetAll<GpxPoint>(GpxPoint.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
+                //TODO: Segmentos?
+                //TODO: WayPoints?
+                var servicioGPX = new Services.GestorGpx(tracks);
+                servicioGPX.SaveInStream(ms);
+                return File(ms.ToArray(), "application/gpx+xml", "track.gpx");
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.GPX);
+                return null;
+            }
         }
 
         [HttpGet]
         public List<TrackLugarDTO> GetTracksLugar(int id)
         {
-            var _datosMapa = _dapper.GetAll<TrackLugarDTO>($"select * FROM vwTracksLugar where IdLugar ={id}", null, commandType: CommandType.Text);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetTracksLugar Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.TracksLugar);
 
-            if (_datosMapa != null && _datosMapa.Count > 0)
-                return _datosMapa;
-            else
-                return new List<TrackLugarDTO>();
+            try
+            {
+                var _datosMapa = _dapper.GetAll<TrackLugarDTO>($"select * FROM vwTracksLugar where IdLugar ={id}", null, commandType: CommandType.Text);
+
+                if (_datosMapa != null && _datosMapa.Count > 0)
+                    return _datosMapa;
+                else
+                    return new List<TrackLugarDTO>();
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso,  accion: Accion.TracksLugar);
+                return null;
+            }
         }
-        
+
 
         [HttpGet]
         public ActionResult GetMeteoblueMapa(int id)
         {
-            var punto = GetPuntoByIdElemento(id);
-            var url = String.Format("https://www.meteoblue.com/es/tiempo/maps/widget/{0:0.000}{1}{2:0.000}{3}?windAnimation=0&windAnimation=1&gust=0&gust=1&satellite=0&satellite=1&coronaWeatherScore=0&coronaWeatherScore=1&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=10&autowidth=auto",
-               punto.Latitud,
-               (punto.Latitud > 0) ? 'N' : 'S',
-               punto.Longitud,
-               (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
-            return PartialView("_MeteoBlueMapa", url);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetMeteoblueMapa Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.MeteoblueMapa);
+
+            try
+            {
+                var punto = GetPuntoByIdElemento(id);
+                var url = String.Format("https://www.meteoblue.com/es/tiempo/maps/widget/{0:0.000}{1}{2:0.000}{3}?windAnimation=0&windAnimation=1&gust=0&gust=1&satellite=0&satellite=1&coronaWeatherScore=0&coronaWeatherScore=1&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=10&autowidth=auto",
+                   punto.Latitud,
+                   (punto.Latitud > 0) ? 'N' : 'S',
+                   punto.Longitud,
+                   (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
+                return PartialView("_MeteoBlueMapa", url);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.MeteoblueMapa);
+                return null;
+            }
         }
 
         [HttpGet]
         public ActionResult GetMeteoblue3h(int id)
         {
-            var punto = GetPuntoByIdElemento(id);
-            var url = String.Format("https://www.meteoblue.com/es/tiempo/widget/three/{0:0.000}{1}{2:0.000}{3}?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=image",
-               punto.Latitud,
-               (punto.Latitud > 0)?'N':'S',
-               punto.Longitud,
-               (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
-            return PartialView("_MeteoBlue3h", url);
+            TrazaAcceso();
+            _traza.SetTraza(String.Concat("GetMeteoblue3h Id: ", id.ToString()), ViewBag.IdAcceso, Nivel.Info, accion: Accion.Meteoblue3h);
+
+            try
+            {
+                var punto = GetPuntoByIdElemento(id);
+                var url = String.Format("https://www.meteoblue.com/es/tiempo/widget/three/{0:0.000}{1}{2:0.000}{3}?geoloc=fixed&nocurrent=0&noforecast=0&days=4&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&layout=image",
+                   punto.Latitud,
+                   (punto.Latitud > 0) ? 'N' : 'S',
+                   punto.Longitud,
+                   (punto.Longitud < 0) ? 'E' : 'O').Replace(",", ".");
+                return PartialView("_MeteoBlue3h", url);
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.Meteoblue3h);
+                return null;
+            }
         }
 
         public IActionResult Index()
         {
-            return View();
+            TrazaAcceso();
+            _traza.SetTraza("Index", ViewBag.IdAcceso, Nivel.Info, accion: Accion.Base);
+
+            try
+            {
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _traza.InsertException(ex, ViewBag.IdAcceso, accion: Accion.Base);
+                return null;
+            }
         }
 
         public IActionResult Privacy()
@@ -283,6 +496,8 @@ namespace RutotecaWeb.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
+            TrazaAcceso();
+            _traza.SetTraza("Error", ViewBag.IdAcceso, Nivel.Error, accion: Accion.Error);
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }

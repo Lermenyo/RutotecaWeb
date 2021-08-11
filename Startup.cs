@@ -31,6 +31,7 @@ namespace RutotecaWeb
                           Configuration.GetConnectionString("DefaultConnection")));
             //Register dapper in scope  
             services.AddScoped<IDapper, Dapperr>();
+            services.AddScoped<ITrace, Trace>();
 
             services.AddControllersWithViews();
         }
