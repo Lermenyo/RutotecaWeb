@@ -14,7 +14,6 @@ namespace RutotecaWeb.Models
         public string DescripcionCorta { get; set; }
         public int IdTipoElemento { get; set; }
         public string TipoElemento { get; set; }
-        public int Metros { get; set; }
         public int ImportanciaIntrinseca { get; set; }
     }
 }

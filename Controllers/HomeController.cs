@@ -42,7 +42,7 @@ namespace RutotecaWeb.Controllers
                 if (!String.IsNullOrEmpty(id))
                 {
                     var _par = new Dapper.DynamicParameters();
-                    var _elemento = await Task.FromResult(_dapper.Get<ElementoDTO>($"select * FROM vwPermalink where Permalink='{id}'", null, commandType: CommandType.Text));
+                    var _elemento = await Task.FromResult(_dapper.Get<ElementoDTO>(Dapperr.BasDB, $"select * FROM vwPermalink where Permalink='{id}'", null, commandType: CommandType.Text));
                     switch (_elemento.IdTipoElemento)
                     {
                         case 1:  //Ruta
@@ -81,8 +81,8 @@ namespace RutotecaWeb.Controllers
 
         private async Task<IActionResult> SetRuta(int idElemento)
         {
-            var _ruta = await Task.FromResult(_dapper.Get<RutaDTO>($"select * FROM vwRutas where IdElemento={idElemento}", null, commandType: CommandType.Text));
-            _ruta.TablaExistencias = await Task.FromResult(_dapper.Get<TablaExistenciasDTO>($"select * FROM AuxTablaExistencias where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            var _ruta = await Task.FromResult(_dapper.Get<RutaDTO>(Dapperr.BasDB, $"select * FROM vwRutas where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            _ruta.TablaExistencias = await Task.FromResult(_dapper.Get<TablaExistenciasDTO>(Dapperr.AuxDB, $"select * FROM AuxTablaExistencias where IdElemento={idElemento}", null, commandType: CommandType.Text));
             if (_ruta != null)
             {
                 ViewData["Title"] = String.Format("{0} {1} {2} - {3}", _ruta.CodigoTipo, _ruta.CodigoLugar, _ruta.Numero, _ruta.Nombre);
@@ -95,7 +95,7 @@ namespace RutotecaWeb.Controllers
 
         private async Task<IActionResult> SetLocalidad(int idElemento)
         {
-            var _localidad = await Task.FromResult(_dapper.Get<LocalidadDTO>($"select * FROM vwLocalidades where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            var _localidad = await Task.FromResult(_dapper.Get<LocalidadDTO>(Dapperr.BasDB, $"select * FROM vwLocalidades where IdElemento={idElemento}", null, commandType: CommandType.Text));
             if (_localidad != null)
             {
                 ViewData["Title"] = String.Format("{0}", _localidad.Nombre);
@@ -108,7 +108,7 @@ namespace RutotecaWeb.Controllers
 
         private async Task<IActionResult> SetVertice(int idElemento)
         {
-            var _vertice = await Task.FromResult(_dapper.Get<VerticeDTO>($"select * FROM vwVertices where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            var _vertice = await Task.FromResult(_dapper.Get<VerticeDTO>(Dapperr.BasDB, $"select * FROM vwVertices where IdElemento={idElemento}", null, commandType: CommandType.Text));
             if (_vertice != null)
             {
                 ViewData["Title"] = String.Format("{0} - {1}", _vertice.Nombre, _vertice.DescripcionCorta);
@@ -121,7 +121,7 @@ namespace RutotecaWeb.Controllers
 
         private async Task<IActionResult> SetTag(int idElemento)
         {
-            var _tag = await Task.FromResult(_dapper.Get<TagDTO>($"select * FROM vwVertices where IdElemento={idElemento}", null, commandType: CommandType.Text));
+            var _tag = await Task.FromResult(_dapper.Get<TagDTO>(Dapperr.BasDB, $"select * FROM vwVertices where IdElemento={idElemento}", null, commandType: CommandType.Text));
             if (_tag != null)
             {
                 ViewData["Title"] = String.Format("{0} - {1}", _tag.Nombre, _tag.DescripcionCorta);
@@ -139,7 +139,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var datos = _dapper.Get<AtimetriaDTO>($"select * FROM AuxAltimetrias where idRuta = {id}", null, commandType: CommandType.Text);
+                var datos = _dapper.Get<AtimetriaDTO>(Dapperr.AuxDB, $"select * FROM AuxAltimetrias where idRuta = {id}", null, commandType: CommandType.Text);
                 if (datos != null)
                     return Json(System.Text.Json.JsonSerializer.Deserialize<object>(datos.Json));
                 else
@@ -159,7 +159,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                return await Task.FromResult(_dapper.GetAll<CercanoDTO>($"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text));
+                return await Task.FromResult(_dapper.GetAll<CercanoDTO>(Dapperr.BasDB, $"select * FROM vwElementosCercanos where ID ={id}", null, commandType: CommandType.Text));
             }
             catch (Exception ex)
             {
@@ -176,7 +176,8 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwLugaresEnRuta where ID ={id}", null, commandType: CommandType.Text);
+                var _idsElemento = _dapper.GetAll<int>(Dapperr.AuxDB, $"select IdElemento2  FROM AuxCercania where IdElemento1 = {id}", null, commandType: CommandType.Text);
+                var _cecanos = _dapper.GetAll<CercanoDTO>(Dapperr.BasDB, $"SELECT {id} as ID, T2.Nombre, T2.Permalink, T2.DescripcionCorta, T2.IdTipoElemento, T3.Nombre AS TipoElemento, T2.ImportanciaIntrinseca FROM dbo.Elementos T2 INNER JOIN dbo.TiposElemento AS T3 ON T2.IdTipoElemento = T3.Id where T2.Id IN (" + String.Join(',',_idsElemento) + ")", null, commandType: CommandType.Text);
                 return PartialView("_ListaCercanos", _cecanos);
             }
             catch (Exception ex)
@@ -194,7 +195,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _archivos = _dapper.GetAll<ArchivosDTO>($"select * FROM vwArchivos where IdElemento ={id}", null, commandType: CommandType.Text);
+                var _archivos = _dapper.GetAll<ArchivosDTO>(Dapperr.BasDB, $"select * FROM vwArchivos where IdElemento ={id}", null, commandType: CommandType.Text);
                 return PartialView("_ListaArchivos", _archivos);
             }
             catch (Exception ex)
@@ -213,7 +214,7 @@ namespace RutotecaWeb.Controllers
             try
             {
                 //https://documentos.rutoteca.es/SL-CV-0168/perfil_302.jpg
-                var _imagenes = _dapper.GetAll<ImagenesDTO>($"select * FROM vwImagenes where IdElemento ={id}", null, commandType: CommandType.Text);
+                var _imagenes = _dapper.GetAll<ImagenesDTO>(Dapperr.BasDB, $"select * FROM vwImagenes where IdElemento ={id}", null, commandType: CommandType.Text);
                 return PartialView("_CarruselImagenes", _imagenes);
             }
             catch (Exception ex)
@@ -247,7 +248,7 @@ namespace RutotecaWeb.Controllers
                 };
 
                 ///home/getgpx/
-                var _tracks = _dapper.GetAll<TracksListadoDTO>(TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
+                var _tracks = _dapper.GetAll<TracksListadoDTO>(Dapperr.GpxDB, TracksListadoDTO.SELECT_COMPLETA + $" WHERE T4.IDELEMENTO = {id}", null, commandType: CommandType.Text);
                 _tracks.ForEach(t => { t.Color = colors[_tracks.IndexOf(t)]; });
                 return PartialView("_ListaTracks", _tracks);
             }
@@ -277,7 +278,17 @@ namespace RutotecaWeb.Controllers
 
         public PuntoMapa GetPuntoByIdElemento(int id)
         {
-            return _dapper.Get<PuntoMapa>($"select * FROM vwPuntoElemento where ID ={id}", null, commandType: CommandType.Text);
+            var select1 = "SELECT        dbo.Elementos.Id, dbo.Coordenadas.Latitud, dbo.Coordenadas.Longitud, 13 AS Zoom" +
+                           "        FROM dbo.Elementos INNER JOIN" + 
+                           "             dbo.Elementos_Lugar ON dbo.Elementos.Id = dbo.Elementos_Lugar.IdElemento INNER JOIN" +
+                           "             dbo.Coordenadas ON dbo.Elementos_Lugar.IdCoordenada = dbo.Coordenadas.Id";
+            var select2 = "SELECT        0 as IdElemento, T2.IntermedioLat AS Latitud, T2.IntermedioLon AS Longitud, 13 AS Zoom"+
+                          "         FROM AuxMapaTrack";
+
+            var datos = _dapper.Get<PuntoMapa>(Dapperr.BasDB, select1 + $"where ID ={id}", null, commandType: CommandType.Text);
+            if (datos == null)
+                datos = _dapper.Get<PuntoMapa>(Dapperr.AuxDB, select2 + $"where IdRuta ={id}", null, commandType: CommandType.Text);
+            return datos;
         }
 
         [HttpGet]
@@ -288,7 +299,22 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _cecanos = _dapper.GetAll<CercanoDTO>($"select * FROM vwRutasEnLugar where ID ={id}", null, commandType: CommandType.Text);
+                var select =
+                $"SELECT        " +
+                "{id} AS ID, " +
+                "T2.Nombre, " +
+                "T2.Permalink, " +
+                "T2.DescripcionCorta, " +
+                "T2.IdTipoElemento, " +
+                "T3.Nombre AS TipoElemento, " +
+                "T1.Metros, " +
+                "T2.ImportanciaIntrinseca, " +
+                "T1.IdElemento1 AS IdElementoRuta " +
+                "FROM " +
+                "      dbo.Elementos AS T2 " + 
+                "      dbo.TiposElemento AS T3 ON T2.IdTipoElemento = T3.Id";
+                var ids = _dapper.GetAll<int>(Dapperr.AuxDB, $"select IdElemento1 FROM AuxCercania where IdElemento2 = {id}", null, commandType: CommandType.Text);
+                var _cecanos = _dapper.GetAll<CercanoDTO>(Dapperr.BasDB, select + " where ID in (" + String.Join(',',ids) + ")", null, commandType: CommandType.Text);
                 return PartialView("_ListaCercanos", _cecanos);
             }
             catch (Exception ex)
@@ -305,7 +331,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwTagsRuta where Id ={id}", null, commandType: CommandType.Text);
+                var _cecanos = _dapper.GetAll<RelacionadoDTO>(Dapperr.AuxDB, $"select * FROM AuxVwTagsRuta where Id ={id}", null, commandType: CommandType.Text);
                 return PartialView("_ListaRelacionados", _cecanos);
             }
             catch (Exception ex)
@@ -323,7 +349,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _cecanos = _dapper.GetAll<RelacionadoDTO>($"select * FROM vwRutasTag where Id ={id}", null, commandType: CommandType.Text);
+                var _cecanos = _dapper.GetAll<RelacionadoDTO>(Dapperr.AuxDB, $"select * FROM AuxVwRutasTag where Id ={id}", null, commandType: CommandType.Text);
                 return PartialView("_ListaRelacionados", _cecanos);
             }
             catch (Exception ex)
@@ -341,7 +367,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+                var _datosMapa = _dapper.GetAll<MapaDTO>(Dapperr.AuxDB, $"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
 
                 if (_datosMapa != null && _datosMapa.Count > 0)
                     return _datosMapa;
@@ -363,7 +389,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _datosMapa = _dapper.GetAll<MapaDTO>($"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
+                var _datosMapa = _dapper.GetAll<MapaDTO>(Dapperr.AuxDB, $"select * FROM AuxMapaTrack where IdRuta ={id}", null, commandType: CommandType.Text);
 
                 if (_datosMapa != null && _datosMapa.Count > 0)
                     return _datosMapa;
@@ -387,12 +413,9 @@ namespace RutotecaWeb.Controllers
             try
             {
                 MemoryStream ms = new MemoryStream();
-                Tracks tracks = _dapper.Get<Tracks>(Tracks.SELECT_COMPLETA + $" WHERE Id = {id}", null, commandType: CommandType.Text);
-                tracks.GpxMetadata.AddRange(_dapper.GetAll<GpxMetadata>(GpxMetadata.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
-                tracks.GpxPoint.AddRange(_dapper.GetAll<GpxPoint>(GpxPoint.SELECT_COMPLETA + $" WHERE [IdTrack] = {id}", null, commandType: CommandType.Text));
-                //TODO: Segmentos?
-                //TODO: WayPoints?
-                var servicioGPX = new Services.GestorGpx(tracks);
+                var track = new Track();
+                track.GpxPoint.AddRange(_dapper.GetAll<GpxPoint>(Dapperr.GpxDB, GpxPoint.SELECT_COMPLETA + $" WHERE IdTrack = {id} ORDER BY 1", null, commandType: CommandType.Text));
+                var servicioGPX = new Services.GestorGpx(track);
                 servicioGPX.SaveInStream(ms);
                 return File(ms.ToArray(), "application/gpx+xml", "track.gpx");
             }
@@ -411,7 +434,7 @@ namespace RutotecaWeb.Controllers
 
             try
             {
-                var _datosMapa = _dapper.GetAll<TrackLugarDTO>($"select * FROM vwTracksLugar where IdLugar ={id}", null, commandType: CommandType.Text);
+                var _datosMapa = _dapper.GetAll<TrackLugarDTO>(Dapperr.AuxDB, $"select * FROM vwTracksLugar where IdLugar ={id}", null, commandType: CommandType.Text);
 
                 if (_datosMapa != null && _datosMapa.Count > 0)
                     return _datosMapa;

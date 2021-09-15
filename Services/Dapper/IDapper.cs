@@ -10,11 +10,11 @@ namespace RutotecaWeb.Services
 {
     public interface IDapper : IDisposable
     {
-        DbConnection GetDbconnection();
-        T Get<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
-        List<T> GetAll<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
-        int Execute(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
-        T Insert<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
-        T Update<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
+        DbConnection GetDbconnection(string conn);
+        T Get<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
+        List<T> GetAll<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
+        int Execute(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
+        T Insert<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
+        T Update<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure);
     }
 }

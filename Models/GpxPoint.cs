@@ -7,41 +7,23 @@ namespace RutotecaWeb.Models
     {
         public GpxPoint()
         {
-            this.GpxWayPoint = new HashSet<GpxWayPoint>();
+
         }
     
         public long Id { get; set; }
-        public Nullable<decimal> lat { get; set; }
-        public Nullable<decimal> lon { get; set; }
-        public Nullable<decimal> ele { get; set; }
-        public Nullable<System.DateTime> time { get; set; }
-        public Nullable<int> IdTrack { get; set; }
-        public Nullable<int> Orden { get; set; }
-        public string Name { get; set; }
-        public string Comment { get; set; }
-        public string Description { get; set; }
-        public string Source { get; set; }
-        public string Symbol { get; set; }
-        public Nullable<int> IdSegmento { get; set; }
-    
-        public virtual GpxTrackSegment GpxTrackSegment { get; set; }
-        public virtual ICollection<GpxWayPoint> GpxWayPoint { get; set; }
-        public virtual Tracks Tracks { get; set; }
+        public long IdPunto { get; set; }
+        public int IdSegmento { get; set; }
+        public int IdCuadricula { get; set; }
+        public int IdTrack { get; set; }
+        public Nullable<decimal> Lat { get; set; }
+        public Nullable<decimal> Lon { get; set; }
+        public Nullable<int> Ele { get; set; }
+        public Nullable<System.DateTime> Time { get; set; }
 
         public static string SELECT_COMPLETA =
-                "SELECT [Id],   " +
-                "[lat]      ," +
-                "[lon]      ," +
-                "[ele]      ," +
-                "[time]      ," +
-                "[IdTrack]     ," +
-                "[Orden]      ," +
-                "[Name]      ," +
-                "[Comment]      ," +
-                "[Description]      ," +
-                "[Source]      ," +
-                "[Symbol]      ," +
-                "[IdSegmento]   " +
-                "FROM [rutoteca].[dbo].[GpxPoint]";
+                "SELECT T3.Id, T3.IdPunto, T3.IdSegmento, T2.IdCuadricula, T3.IdTrack, T2.Ele, T2.Lat, T2.Lon, T3.Time " +
+                "FROM Cuadricula T1                             " +
+                "INNER JOIN Punto T2 ON T1.Id = T2.IdCuadricula " +
+                "INNER JOIN TrackPoint T3 ON T3.IdPunto = T2.Id ";
     }
 }

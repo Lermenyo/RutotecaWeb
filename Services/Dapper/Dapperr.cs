@@ -13,7 +13,11 @@ namespace RutotecaWeb.Services
     public class Dapperr : IDapper
     {
         private readonly IConfiguration _config;
-        private string Connectionstring = "DefaultConnection";
+        public static string BasDB = "Base";
+        public static string AuxDB = "Aux";
+        public static string GpxDB = "Gpx";
+        public static string LogDB = "Log";
+        
 
         public  Dapperr(IConfiguration config)
         {
@@ -24,32 +28,32 @@ namespace RutotecaWeb.Services
            
         }
 
-        public int Execute(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
+        public int Execute(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
         {
             throw new NotImplementedException();
         }
 
-        public T Get<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.Text)
+        public T Get<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.Text)
         {
-            using IDbConnection db = new SqlConnection(_config.GetConnectionString(Connectionstring));
+            using IDbConnection db = new SqlConnection(_config.GetConnectionString(conn));
             return db.Query<T>(sp, parms, commandType: commandType).FirstOrDefault();
         }
 
-        public List<T> GetAll<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
+        public List<T> GetAll<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
         {
-            using IDbConnection db = new SqlConnection(_config.GetConnectionString(Connectionstring));
+            using IDbConnection db = new SqlConnection(_config.GetConnectionString(conn));
             return db.Query<T>(sp, parms, commandType: commandType).ToList();
         }
 
-        public DbConnection GetDbconnection()
+        public DbConnection GetDbconnection(string conn)
         {
-            return new SqlConnection(_config.GetConnectionString(Connectionstring));
+            return new SqlConnection(_config.GetConnectionString(conn));
         }
 
-        public T Insert<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
+        public T Insert<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
         {
             T result;
-            using IDbConnection db = new SqlConnection(_config.GetConnectionString(Connectionstring));
+            using IDbConnection db = new SqlConnection(_config.GetConnectionString(conn));
             try
             {
                 if (db.State == ConnectionState.Closed)
@@ -80,10 +84,10 @@ namespace RutotecaWeb.Services
             return result;
         }
 
-        public T Update<T>(string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
+        public T Update<T>(string conn, string sp, DynamicParameters parms, CommandType commandType = CommandType.StoredProcedure)
         {
             T result;
-            using IDbConnection db = new SqlConnection(_config.GetConnectionString(Connectionstring));
+            using IDbConnection db = new SqlConnection(_config.GetConnectionString(conn));
             try
             {
                 if (db.State == ConnectionState.Closed)

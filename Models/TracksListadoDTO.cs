@@ -29,8 +29,7 @@ namespace RutotecaWeb.Models
             "T3.[totaltime]     AS TIEMPO    " +
             "FROM[rutoteca].[dbo].[Tracks] T1 " +
             "INNER JOIN[dbo].[TrackRuta] T2 ON T1.[Id] = IDTRACK " +
-            "LEFT JOIN IBPINDEX T3 ON T3.[idTrack] = T1.ID " +
-            "INNER JOIN Rutas T4 ON T4.ID = T2.IDRUTA";
+            "LEFT JOIN IBPINDEX T3 ON T3.[idTrack] = T1.ID ";
         //WHERE T2.IDRUTA = 8203 
     }
 }

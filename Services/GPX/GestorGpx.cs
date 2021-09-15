@@ -11,19 +11,19 @@ namespace RutotecaWeb.Services
 {
     class GestorGpx: IDisposable
     {
-        private List<Tracks> _tracks;
+        private List<Track> _tracks;
         private bool disposedValue;
 
         public GestorGpx()
         {
         }
 
-        public GestorGpx(Tracks track)
+        public GestorGpx(Track track)
         {
-            _tracks = new List<Tracks>();
+            _tracks = new List<Track>();
             _tracks.Add(track);
         }
-        public GestorGpx(List<Tracks> tracks)
+        public GestorGpx(List<Track> tracks)
         {
             _tracks = tracks;
         }
@@ -59,8 +59,8 @@ namespace RutotecaWeb.Services
         }
 
         #region Crear Fichero GPX
-
-        GpxWriter loadTrack(List<Tracks> tracks, 
+        
+        GpxWriter loadTrack(List<Track> tracks, 
                             Stream stream,
                             string link_Href = "https://rutoteca.es/",
                             string link_Text = "Rutoteca",
@@ -73,19 +73,6 @@ namespace RutotecaWeb.Services
             {
 
                 var newMetadata = new Gpx.GpxMetadata();
-                if (t.GpxMetadata.Any())
-                {
-                    var metaBD = t.GpxMetadata.First();
-                    newMetadata.Bounds = new GpxBounds();
-                    if (metaBD.minlat.HasValue)
-                        newMetadata.Bounds.MinLatitude = (double)metaBD.minlat.Value;
-                    if (metaBD.maxlat.HasValue)
-                        newMetadata.Bounds.MaxLatitude = (double)metaBD.maxlat.Value;
-                    if (metaBD.minlon.HasValue)
-                        newMetadata.Bounds.MinLongitude = (double)metaBD.minlon.Value;
-                    if (metaBD.minlat.HasValue)
-                        newMetadata.Bounds.MinLatitude = (double)metaBD.minlon.Value;
-                }
                 newMetadata.Link = new GpxLink();
                 newMetadata.Link.Href = link_Href;
                 newMetadata.Link.MimeType = mimeType;
@@ -94,67 +81,49 @@ namespace RutotecaWeb.Services
                 newMetadata.Description = descripcion;
                 newGpx.WriteMetadata(newMetadata);
 
-
                 GpxTrack newTrack = new GpxTrack();
-                newTrack.Comment = t.Comment;
-                newTrack.Description = t.Description;
-                newTrack.Name = t.Name;
-                newTrack.Number = t.Number;
-                newTrack.Source = t.Source;
-                newTrack.Type = t.Type;
-                if (t.GpxTrackSegment.Any())
+                var newSegment = new Gpx.GpxTrackSegment();
+                var inicio = t.GpxPoint.First().Time;
+                t.GpxPoint.ToList().ForEach(pt =>
                 {
-                    t.GpxTrackSegment.ToList().ForEach(s =>
-                    {
-                        var newSegment = new Gpx.GpxTrackSegment();
-                        s.GpxPoint.ToList().ForEach(pt =>
-                        {
-                            if (pt.GpxWayPoint.Any())
-                                newGpx.WriteWayPoint(SetGpxWayPoint(pt));
-                            else
-                                newSegment.TrackPoints.Add(SetGpxPoint(pt));
-                        });
-                        newTrack.Segments.Add(newSegment);
-                    });
-                }
-                else
-                {
-                    var newSegment = new Gpx.GpxTrackSegment();
-                    t.GpxPoint.ToList().ForEach(pt =>
-                    {
-                        if (pt.GpxWayPoint.Any())
-                            newGpx.WriteWayPoint(SetGpxWayPoint(pt));
-                        else
-                            newSegment.TrackPoints.Add(SetGpxPoint(pt));
-                    });
-                    newTrack.Segments.Add(newSegment);
-                }
+                    newSegment.TrackPoints.Add(SetGpxPoint(pt, inicio));
+                });
+                newTrack.Segments.Add(newSegment);
                 newGpx.WriteTrack(newTrack);
             }
             );
             return newGpx;
         }
 
-        Gpx.GpxTrackPoint SetGpxPoint(Models.GpxPoint pt)
+        Gpx.GpxTrackPoint SetGpxPoint(Models.GpxPoint pt, DateTime? inicio)
         {
+            /*
+             * Sacar elevacion
+             https://secure.geonames.org/srtm3JSON?lat=43.528641&lng=-6.523797&username=galwayireland
+            {"srtm3":107,"lng":-6.523797,"lat":43.528641}
+             */
             var pto = new Gpx.GpxTrackPoint();
-            pto.Comment = pt.Comment;
-            pto.Description = pt.Description;
-            pto.Elevation = (Double?)pt.ele;
-            if (pt.lat < 25)
+            pto.Elevation = pt.Ele??1;
+            if (pt.Lat < 25)
             {
-                pto.Latitude = (Double)(pt.lon ?? 0);
-                pto.Longitude = (Double)(pt.lat ?? 0);
+                pto.Latitude = (Double)(pt.Lon ?? 0);
+                pto.Longitude = (Double)(pt.Lat ?? 0);
             }
             else
             {
-                pto.Latitude = (Double)(pt.lat ?? 0);
-                pto.Longitude = (Double)(pt.lon ?? 0);
+                pto.Latitude = (Double)(pt.Lat ?? 0);
+                pto.Longitude = (Double)(pt.Lon ?? 0);
             }
-            pto.Name = pt.Name;
-            pto.Source = pt.Source;
-            pto.Symbol = pt.Symbol;
-            pto.Time = pt.time;
+            if (inicio.HasValue && pt.Time.HasValue)
+            {
+                DateTime dt = DateTime.Now;
+                TimeSpan ts = pt.Time.Value - inicio.Value;
+                pto.Time = dt + ts;
+            }
+            else
+            {
+                pto.Time = DateTime.Now;
+            }
             return pto;
         }
 
@@ -162,19 +131,12 @@ namespace RutotecaWeb.Services
         Gpx.GpxWayPoint SetGpxWayPoint(Models.GpxPoint pt)
         {
             var pto = new Gpx.GpxWayPoint();
-            pto.Comment = pt.Comment;
-            pto.Description = pt.Description;
-            pto.Elevation = (Double?)pt.ele;
-            pto.Latitude = (Double)(pt.lat ?? 0);
-            pto.Longitude = (Double)(pt.lon ?? 0);
-            pto.Name = pt.Name;
-            pto.Source = pt.Source;
-            pto.Symbol = pt.Symbol;
-            pto.Time = pt.time;
-            pto.DisplayMode = pt.GpxWayPoint.FirstOrDefault()?.DisplayMode;
+            pto.Elevation = (Double?)pt.Ele;
+            pto.Latitude = (Double)(pt.Lat ?? 0);
+            pto.Longitude = (Double)(pt.Lon ?? 0);
             return pto;
         }
-
+        
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
